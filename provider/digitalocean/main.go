@@ -7,6 +7,7 @@ import (
 
 	"github.com/digitalocean/godo"
 	f "github.com/tonyzou/flexvolumes"
+	"strings"
 )
 
 const CRED_FILE string = "/tmp/do_creds"
@@ -29,7 +30,15 @@ func (DigitalOceanPlugin) Init() f.Result {
 
 func (DigitalOceanPlugin) Attach(opts interface{}) f.Result {
 	opt := opts.(*DigitalOceanOptions)
-	client := getClient("") //put token here
+	credBytes, err := ioutil.ReadFile(CRED_FILE)
+	if err != nil {
+		return f.Fail("Failed to read credentials: ", err.Error())
+	}
+	credentials := string((credBytes))
+	cred := strings.TrimSpace(credentials)
+
+	client := getClient(cred) //put token here
+	//client := getClient("") //put token here
 	if client == nil {
 		return f.Fail("Could not create client")
 	}
@@ -53,10 +62,10 @@ func (DigitalOceanPlugin) Attach(opts interface{}) f.Result {
 		return *res
 	}
 
-	if err = ioutil.WriteFile(CRED_FILE, []byte(opt.ApiKey), 0600); err != nil {
+	/*if err = ioutil.WriteFile(CRED_FILE, []byte(opt.ApiKey), 0600); err != nil {
 		return f.Fail("Could not save credentials: ", err.Error())
 	}
-
+*/
 	return f.Result{
 		Status: "Success",
 		Device: DEVICE_PREFIX + vol.Name,
@@ -64,12 +73,14 @@ func (DigitalOceanPlugin) Attach(opts interface{}) f.Result {
 }
 
 func (DigitalOceanPlugin) Detach(device string) f.Result {
-	/*credBytes, err := ioutil.ReadFile(CRED_FILE)
+	credBytes, err := ioutil.ReadFile(CRED_FILE)
 	if err != nil {
 		return f.Fail("Failed to read credentials: ", err.Error())
-	}*/
+	}
 
-	client := getClient("") //put token here
+	credentials := string((credBytes))
+	cred := strings.TrimSpace(credentials)
+	client := getClient(cred) //put token here
 	if client == nil {
 		return f.Fail("Could not create client")
 	}
@@ -139,7 +150,14 @@ func awaitAction(client *godo.Client, volId string, action *godo.Action) *f.Resu
 
 func (DigitalOceanPlugin) Mount(mountDir string, device string, opts interface{}) f.Result {
 	opt := opts.(*DigitalOceanOptions)
-	client := getClient("") //token here
+	credBytes, err := ioutil.ReadFile(CRED_FILE)
+	if err != nil {
+		return f.Fail("Failed to read credentials: ", err.Error())
+	}
+
+	credentials := string((credBytes))
+	cred := strings.TrimSpace(credentials)
+	client := getClient(cred) //put token here
 	if client == nil {
 		return f.Fail("Could not create client")
 	}
