@@ -2,7 +2,7 @@ package main
 
 import (
 	"io/ioutil"
-	"strings"
+	//"strings"
 	"time"
 
 	"github.com/digitalocean/godo"
@@ -29,14 +29,14 @@ func (DigitalOceanPlugin) Init() f.Result {
 
 func (DigitalOceanPlugin) Attach(opts interface{}) f.Result {
 	opt := opts.(*DigitalOceanOptions)
-	client := getClient(opt.ApiKey)
+	client := getClient("") //put token here
 	if client == nil {
 		return f.Fail("Could not create client")
 	}
 
 	vol, _, err := client.Storage.GetVolume(opt.VolumeId)
 	if err != nil {
-		return f.Fail("Could not get volume \"", opt.VolumeId, "\": ", err.Error())
+		return f.Fail("Could not get volume \"", opt.VolumeId, "\": ", err.Error(), )
 	}
 
 	droplet, err := detectDroplet(client)
@@ -64,22 +64,23 @@ func (DigitalOceanPlugin) Attach(opts interface{}) f.Result {
 }
 
 func (DigitalOceanPlugin) Detach(device string) f.Result {
-	credBytes, err := ioutil.ReadFile(CRED_FILE)
+	/*credBytes, err := ioutil.ReadFile(CRED_FILE)
 	if err != nil {
 		return f.Fail("Failed to read credentials: ", err.Error())
-	}
+	}*/
 
-	client := getClient(string(credBytes))
+	client := getClient("") //put token here
 	if client == nil {
 		return f.Fail("Could not create client")
 	}
 
-	if !strings.HasPrefix(device, DEVICE_PREFIX) {
+	/*if !strings.HasPrefix(device, DEVICE_PREFIX) {
 		return f.Fail("Expected path starting with ", DEVICE_PREFIX, "; instead got ", device)
 	}
 
-	diskName := device[len(DEVICE_PREFIX):]
+	diskName := device[len(DEVICE_PREFIX):]*/
 
+	diskName := device
 	vols, _, err := client.Storage.ListVolumes(nil)
 	if err != nil {
 		return f.Fail("Failed to list volumes: ", err.Error())
@@ -136,8 +137,20 @@ func awaitAction(client *godo.Client, volId string, action *godo.Action) *f.Resu
 	return nil
 }
 
-func (DigitalOceanPlugin) Mount(mountDir string, device string, opt interface{}) f.Result {
-	return f.Mount(mountDir, device, opt.(*DigitalOceanOptions).DefaultOptions)
+func (DigitalOceanPlugin) Mount(mountDir string, device string, opts interface{}) f.Result {
+	opt := opts.(*DigitalOceanOptions)
+	client := getClient("") //token here
+	if client == nil {
+		return f.Fail("Could not create client")
+	}
+
+	vol, _, err := client.Storage.GetVolume(opt.VolumeId)
+	if err != nil {
+		return f.Fail("Could not get volume \"", opt.VolumeId, "\": ", err.Error(), )
+	}
+
+	device = DEVICE_PREFIX + vol.Name
+	return f.Mount(mountDir, device, opt.DefaultOptions)
 }
 
 func (DigitalOceanPlugin) Unmount(mountDir string) f.Result {

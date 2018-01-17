@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 	"os/exec"
+	"strings"
+	"fmt"
 
 	"golang.org/x/sys/unix"
 )
@@ -37,6 +39,31 @@ func isMounted(targetDir string) bool {
 	return findmntText == targetDir
 }
 
+func currentFormat(device string) (string, error) {
+
+	lsblkCmd := exec.Command("lsblk", "-n", "-o", "FSTYPE", device)
+	lsblkOut, err := lsblkCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("lsblk -n -o FSTYPE %s: output[%s] error[%s]", device, string(lsblkOut), err.Error())
+	}
+
+	output := strings.TrimSuffix(string(lsblkOut), "\n")
+	lines := strings.Split(output, "\n")
+	if lines[0] != "" {
+		// The device is formatted
+		return lines[0], nil
+	}
+
+	if len(lines) == 1 {
+		// The device is unformatted and has no dependent devices
+		return "", nil
+	}
+
+	// The device has dependent devices, most probably partitions (LVM, LUKS
+	// and MD RAID are reported as FSTYPE and caught above).
+	return "unknown data, probably partitions", nil
+}
+
 func Mount(targetDir string, device string, opt DefaultOptions) Result {
 	fsType := opt.FsType
 	if fsType == "" {
@@ -56,9 +83,15 @@ func Mount(targetDir string, device string, opt DefaultOptions) Result {
 		return Succeed()
 	}
 
-	mkfsCmd := exec.Command("mkfs", "-t", fsType, device)
-	if mkfsOut, err := mkfsCmd.CombinedOutput(); err != nil {
-		return Fail("Could not mkfs: ", err.Error(), " Output: ", string(mkfsOut))
+	format, err := currentFormat(device)
+	if err != nil {
+		return Fail("Can not get current format ", err.Error())
+	}
+	if format != fsType {
+		mkfsCmd := exec.Command("mkfs", "-t", fsType, device)
+		if mkfsOut, err := mkfsCmd.CombinedOutput(); err != nil {
+			return Fail("Could not mkfs: ", err.Error(), " Output: ", string(mkfsOut), "Target: ", targetDir, "Device ", device)
+		}
 	}
 
 	if err := os.MkdirAll(targetDir, 0777); err != nil {
@@ -70,7 +103,7 @@ func Mount(targetDir string, device string, opt DefaultOptions) Result {
 		return Fail("Could not mount: ", err.Error(), " Output: ", string(mountOut))
 	}
 
-	return Succeed()
+	return Succeed("Target: ", targetDir, "Device ", device)
 }
 
 func Unmount(targetDir string) Result {
@@ -83,5 +116,5 @@ func Unmount(targetDir string) Result {
 		return Fail("Could not umount: ", err.Error(), " Output: ", string(umountOut))
 	}
 
-	return Succeed()
+	return Succeed("Target: ", targetDir)
 }

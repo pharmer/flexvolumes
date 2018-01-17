@@ -64,8 +64,8 @@ func RunPlugin(plugin FlexVolumePlugin) {
 		finish(plugin.Init())
 
 	case "attach":
-		if len(os.Args) != 3 {
-			finish(Fail("attach expected exactly 3 arguments; got ", os.Args))
+		if len(os.Args) != 4 {
+			finish(Fail("attach expected exactly 3 arguments; got ", os.Args, len(os.Args), os.Args[2]))
 		}
 
 		opt := plugin.NewOptions()
@@ -76,23 +76,23 @@ func RunPlugin(plugin FlexVolumePlugin) {
 		finish(plugin.Attach(opt))
 
 	case "detach":
-		if len(os.Args) != 3 {
+		/*if len(os.Args) != 3 {
 			finish(Fail("detach expected exactly 3 arguments; got ", os.Args))
-		}
+		}*/
 
 		device := os.Args[2]
 		finish(plugin.Detach(device))
 
 	case "mount":
-		if len(os.Args) != 5 {
-			finish(Fail("mount expected exactly 5 argument; got ", os.Args))
+		if len(os.Args) != 4 {
+			finish(Fail("mount expected exactly 5 argument; got ", os.Args, "...", len(os.Args), os.Args[2], os.Args[3] ))
 		}
 
 		mountDir := os.Args[2]
-		device := os.Args[3]
+		device := "" // os.Args[3]
 
 		opt := plugin.NewOptions()
-		if err := json.Unmarshal([]byte(os.Args[4]), opt); err != nil {
+		if err := json.Unmarshal([]byte(os.Args[3]), opt); err != nil {
 			finish(Fail("Could not parse options for attach; got ", os.Args[2]))
 		}
 
@@ -100,7 +100,7 @@ func RunPlugin(plugin FlexVolumePlugin) {
 
 	case "unmount":
 		if len(os.Args) != 3 {
-			finish(Fail("mount expected exactly 5 argument; got ", os.Args))
+			finish(Fail("mount expected exactly 5 argument; got ", os.Args, len(os.Args)))
 		}
 
 		mountDir := os.Args[2]
@@ -108,7 +108,12 @@ func RunPlugin(plugin FlexVolumePlugin) {
 		finish(plugin.Unmount(mountDir))
 
 	default:
-		finish(Fail("Not sure what to do. Called with: ", os.Args))
+
+		result := Result{
+			Status: "Not supported",
+			Message: "Not supported",
+		}
+		finish(result)
 	}
 
 }

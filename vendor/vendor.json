@@ -40,7 +40,7 @@
 			"revision": "1e695b1c8febf17aad3bfa7bf0a819ef94b98ad5"
 		},
 		{
-			"checksumSHA1": "Xz3hUrPvOYGWTuHrEryoYAj9zwg=",
+			"checksumSHA1": "LtxdUN2nIXqOhuHdLD3RTB7snnk=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "9bb9f0998d48b31547d975974935ae9b48c7a03c"
 		}
