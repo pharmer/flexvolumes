@@ -10,7 +10,6 @@ is this. Use at your own risk. Contributions are welcome.
 
 ```
 go get github.com/pharmer/flexvolumes
-./hack/maky.py
 ```
 
 ### Install
