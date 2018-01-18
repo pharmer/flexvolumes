@@ -1,0 +1,67 @@
+hash: 8ff3a586aead40d282435e6fdc74fc7ff7b8e21841dadbe8f2b518cd4a7fc697
+updated: 2018-01-18T14:50:19.018774805+06:00
+imports:
+- name: github.com/appscode/go
+  version: 74ddf42f1ee8313728203a06092be9cb91d42f7c
+  subpackages:
+  - log/golog
+  - version
+- name: github.com/digitalocean/godo
+  version: 7249498ac084d6cc697aae29fb1108acbfba99e2
+  subpackages:
+  - context
+- name: github.com/golang/glog
+  version: 44145f04b68cf362d9c4df2182967c2275eaefed
+- name: github.com/golang/protobuf
+  version: 4bd1920723d7b7c925de087aa32e2187708897f7
+  subpackages:
+  - proto
+- name: github.com/google/go-querystring
+  version: 547ef5ac979778feb2f760cdb5f4eae1a2207b86
+  subpackages:
+  - query
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/jpillora/go-ogle-analytics
+  version: 14b04e0594ef6a9fd943363b135656f0ec8c9d0e
+- name: github.com/spf13/cobra
+  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
+- name: github.com/spf13/pflag
+  version: f4aa504bb62057ca90e8defc26e169353fd772d4
+  repo: https://github.com/appscode/pflag.git
+  vcs: git
+- name: github.com/tent/http-link-go
+  version: ac974c61c2f990f4115b119354b5e0b47550e888
+- name: github.com/tonyzou/flexvolumes
+  version: eb2edc2032d832961b95f813d30783a1a7a29cda
+- name: github.com/urfave/cli
+  version: 75104e932ac2ddb944a6ea19d9f9f26316ff1145
+- name: golang.org/x/net
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
+  subpackages:
+  - context
+  - context/ctxhttp
+- name: golang.org/x/oauth2
+  version: 3c3a985cb79f52a3190fbc056984415ca6763d01
+  subpackages:
+  - internal
+- name: golang.org/x/sys
+  version: 95c6576299259db960f6c5b9b69ea52422860fce
+  subpackages:
+  - unix
+- name: google.golang.org/appengine
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
+- name: k8s.io/apimachinery
+  version: 5134afd2c0c91158afac0d8a28bd2177185a3bcc
+  subpackages:
+  - pkg/util/runtime
+  - pkg/util/wait
+testImports: []

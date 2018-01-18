@@ -1,0 +1,122 @@
+package cloud
+
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"strings"
+
+	"golang.org/x/sys/unix"
+)
+
+func isMounted(targetDir string) bool {
+	findmntCmd := exec.Command("findmnt", "-n", targetDir)
+	findmntStdout, err := findmntCmd.StdoutPipe()
+	if err != nil {
+		log.Fatalln("Could not get findmount stdout pipe: ", err.Error())
+	}
+
+	if err = findmntCmd.Start(); err != nil {
+		log.Fatalln("findmnt failed to start: ", err.Error())
+	}
+
+	findmntScanner := bufio.NewScanner(findmntStdout)
+	findmntScanner.Split(bufio.ScanWords)
+	findmntScanner.Scan()
+	if findmntScanner.Err() != nil {
+		log.Fatalln("Couldn't read findnmnt output: ", findmntScanner.Err().Error())
+	}
+
+	findmntText := findmntScanner.Text()
+	if err = findmntCmd.Wait(); err != nil {
+		_, isExitError := err.(*exec.ExitError)
+		if !isExitError {
+			log.Fatalln("findmnt failed: ", err.Error())
+		}
+	}
+
+	return findmntText == targetDir
+}
+
+func currentFormat(device string) (string, error) {
+
+	lsblkCmd := exec.Command("lsblk", "-n", "-o", "FSTYPE", device)
+	lsblkOut, err := lsblkCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("lsblk -n -o FSTYPE %s: output[%s] error[%s]", device, string(lsblkOut), err.Error())
+	}
+
+	output := strings.TrimSuffix(string(lsblkOut), "\n")
+	lines := strings.Split(output, "\n")
+	if lines[0] != "" {
+		// The device is formatted
+		return lines[0], nil
+	}
+
+	if len(lines) == 1 {
+		// The device is unformatted and has no dependent devices
+		return "", nil
+	}
+
+	// The device has dependent devices, most probably partitions (LVM, LUKS
+	// and MD RAID are reported as FSTYPE and caught above).
+	return "unknown data, probably partitions", nil
+}
+
+func Mount(targetDir string, device string, opt DefaultOptions) error {
+	fsType := opt.FsType
+	if fsType == "" {
+		return errors.New("No filesystem type specified")
+	}
+
+	var res unix.Stat_t
+	if err := unix.Stat(device, &res); err != nil {
+		return err
+	}
+
+	if res.Mode&unix.S_IFMT != unix.S_IFBLK {
+		return fmt.Errorf("not a block device: %v", device)
+	}
+
+	if isMounted(targetDir) {
+		return nil
+	}
+
+	format, err := currentFormat(device)
+	if err != nil {
+		return err
+	}
+	if format != fsType {
+		mkfsCmd := exec.Command("mkfs", "-t", fsType, device)
+		if mkfsOut, err := mkfsCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("could not mkfs: %v Output: %v", err.Error(), string(mkfsOut))
+		}
+	}
+
+	if err := os.MkdirAll(targetDir, 0777); err != nil {
+		return err
+	}
+
+	mountCmd := exec.Command("mount", device, targetDir)
+	if mountOut, err := mountCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("could not mount: %v Output: %v", err.Error(), string(mountOut))
+	}
+
+	return nil
+}
+
+func Unmount(targetDir string) error {
+	if !isMounted(targetDir) {
+		return nil
+	}
+
+	umountCmd := exec.Command("umount", targetDir)
+	if umountOut, err := umountCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("could not umount: %v Output: %v", err.Error(), string(umountOut))
+	}
+
+	return nil
+}

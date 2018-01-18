@@ -1,0 +1,21 @@
+package: github.com/pharmer/flexvolumes
+import:
+- package: github.com/appscode/go
+  version: master
+- package: github.com/digitalocean/godo
+- package: github.com/golang/glog
+- package: github.com/jpillora/go-ogle-analytics
+- package: github.com/spf13/cobra
+- package: github.com/spf13/pflag
+  repo: https://github.com/appscode/pflag.git
+  vcs: git
+  version: master
+- package: github.com/tonyzou/flexvolumes
+- package: github.com/urfave/cli
+- package: golang.org/x/oauth2
+- package: golang.org/x/sys
+  subpackages:
+  - unix
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/util/wait
