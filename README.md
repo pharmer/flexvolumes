@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/pharmer/flexvolumes)](https://goreportcard.com/report/github.com/pharmer/flexvolumes)
+
 # flexvolumes
 
 This is a collection of Kubernetes FlexVolume plugins. So far I just have
