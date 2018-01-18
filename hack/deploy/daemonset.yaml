@@ -1,3 +1,4 @@
+apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: flex-set
@@ -9,7 +10,7 @@ spec:
         app: flex-deploy
     spec:
       containers:
-        - image: pharmer/flexvolumes:digitalocean
+        - image: pharmer/flexvolumes:canary
           imagePullPolicy: Always
           name: flex-deploy
           securityContext:
@@ -17,7 +18,15 @@ spec:
           volumeMounts:
             - mountPath: /flexmnt
               name: flexvolume-mount
+            - name: flexvolume-secret
+              mountPath: /flexsecret
+          env:
+            - name: PROVIDER
+              value: digitalocean
       volumes:
         - name: flexvolume-mount
           hostPath:
             path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+        - name: flexvolume-secret
+          hostPath:
+            path: /var/run/secrets/pharmer/flexvolmues

@@ -19,7 +19,7 @@ func NewCmdMount() *cobra.Command {
 		DisableAutoGenTag: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) <= 0 && len(args) > 3 {
-				Error(ErrIncorrectArgNumber).Print()
+				Error(cloud.ErrIncorrectArgNumber).Print()
 			}
 			cloud, err := cloud.GetCloudManager(cfg.Provider, context.Background())
 			if err != nil {

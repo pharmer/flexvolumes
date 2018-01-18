@@ -1,19 +1,9 @@
 package cloud
 
-import "time"
-
-type DriverOutput struct {
-	Status       string              `json:"status"`
-	Message      string              `json:"message,omitempty"`
-	Device       string              `json:"device,omitempty"`
-	VolumeName   string              `json:"volumeName,omitempty"`
-	Attached     bool                `json:"attached,omitempty"`
-	Capabilities *DriverCapabilities `json:",omitempty"`
-}
-
-type DriverCapabilities struct {
-	Attach bool `json:"attach"`
-}
+import (
+	"errors"
+	"time"
+)
 
 type DefaultOptions struct {
 	ApiKey         string `json:"kubernetes.io/secret/apiKey"`
@@ -30,6 +20,9 @@ const (
 	RetryInterval             = 5 * time.Second
 	RetryTimeout              = 15 * time.Minute
 )
+
+var ErrNotSupported = errors.New("Not Supported")
+var ErrIncorrectArgNumber = errors.New("Incorrect number of args")
 
 type Interface interface {
 	NewOptions() interface{}

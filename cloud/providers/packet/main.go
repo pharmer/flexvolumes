@@ -1,41 +1,37 @@
 package main
 
 import (
-	// "github.com/packethost/packngo"
-	f "github.com/tonyzou/flexvolumes"
+	. "github.com/pharmer/flexvolumes/cloud"
 )
 
 type PacketOptions struct {
-	f.DefaultOptions
-	VolumeId string `json:"volumeId"`
+	DefaultOptions
 }
 
-type PacketPlugin struct{}
-
-func (PacketPlugin) NewOptions() interface{} {
+func (v *VolumeManager) NewOptions() interface{} {
 	return &PacketOptions{}
 }
 
-func (PacketPlugin) Init() f.Result {
-	return f.Succeed()
+func (v *VolumeManager) Initialize() error {
+	return ErrNotSupported
 }
 
-func (PacketPlugin) Attach(opts interface{}) f.Result {
-	return f.Fail("Not implemented")
+func (v *VolumeManager) Init() error {
+	return nil
 }
 
-func (PacketPlugin) Detach(device string) f.Result {
-	return f.Fail("Not implemented")
+func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, error) {
+	return "", ErrNotSupported
 }
 
-func (PacketPlugin) Mount(mountDir string, device string, opt interface{}) f.Result {
-	return f.Mount(mountDir, device, opt.(*PacketOptions).DefaultOptions)
+func (v *VolumeManager) Detach(device, nodeName string) error {
+	return ErrNotSupported
 }
 
-func (PacketPlugin) Unmount(mountDir string) f.Result {
-	return f.Unmount(mountDir)
+func (v *VolumeManager) Mount(mountDir string, device string, options interface{}) error {
+	return ErrNotSupported
 }
 
-func main() {
-	f.RunPlugin(&PacketPlugin{})
+func (v *VolumeManager) Unmount(mountDir string) error {
+	return Unmount(mountDir)
 }

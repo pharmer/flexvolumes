@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	//"github.com/spf13/pflag"
 	"github.com/appscode/kutil/tools/analytics"
+	"github.com/pharmer/flexvolumes/cloud"
 )
 
 const (
@@ -63,5 +64,5 @@ func checkSupported(cmd string) {
 			return
 		}
 	}
-	Error(ErrNotSupported).Print()
+	Error(cloud.ErrNotSupported).Print()
 }
