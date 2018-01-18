@@ -11,6 +11,7 @@ import (
 	_ "github.com/pharmer/flexvolumes/cloud/providers"
 	"github.com/spf13/cobra"
 	//"github.com/spf13/pflag"
+	"github.com/appscode/kutil/tools/analytics"
 )
 
 const (
@@ -26,11 +27,9 @@ func NewRootCmd(version string) *cobra.Command {
 		Short:             `Pharm flexvolume by Appscode - Start farms`,
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(c *cobra.Command, args []string) {
-			/*c.Flags().VisitAll(func(flag *pflag.Flag) {
-				log.Printf("FLAG: --%s=%q", flag.Name, flag.Value)
-			})*/
 			if enableAnalytics && gaTrackingCode != "" {
 				if client, err := ga.NewClient(gaTrackingCode); err == nil {
+					client.ClientID(analytics.ClientID())
 					parts := strings.Split(c.CommandPath(), " ")
 					client.Send(ga.NewEvent(parts[0], strings.Join(parts[1:], "/")).Label(version))
 				}
@@ -45,6 +44,7 @@ func NewRootCmd(version string) *cobra.Command {
 	if len(os.Args) > 1 {
 		checkSupported(os.Args[1])
 	}
+
 	rootCmd.AddCommand(NewCmdInit())
 	rootCmd.AddCommand(NewCmdAttach())
 	rootCmd.AddCommand(NewCmdMount())
@@ -56,13 +56,12 @@ func NewRootCmd(version string) *cobra.Command {
 	return rootCmd
 }
 
-func checkSupported(cmd string) bool {
+func checkSupported(cmd string) {
 	supported := []string{"init", "attach", "detach", "mount", "unmount"}
 	for _, s := range supported {
 		if s == cmd {
-			return true
+			return
 		}
 	}
 	Error(ErrNotSupported).Print()
-	return false
 }
