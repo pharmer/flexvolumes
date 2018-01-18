@@ -22,7 +22,7 @@ const (
 var (
 	tplFrontMatter = template.Must(template.New("index").Parse(`---
 title: Reference
-description: Pharmer CLI Reference
+description: Flexvolumes CLI Reference
 menu:
   product_pharmer_{{ .Version }}:
     identifier: reference
