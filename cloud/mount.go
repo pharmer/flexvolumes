@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -12,33 +11,33 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func isMounted(targetDir string) bool {
+func isMounted(targetDir string) (bool, error) {
 	findmntCmd := exec.Command("findmnt", "-n", targetDir)
 	findmntStdout, err := findmntCmd.StdoutPipe()
 	if err != nil {
-		log.Fatalln("Could not get findmount stdout pipe: ", err.Error())
+		return false, fmt.Errorf("could not get findmount stdout pipe: %v", err.Error())
 	}
 
 	if err = findmntCmd.Start(); err != nil {
-		log.Fatalln("findmnt failed to start: ", err.Error())
+		return false, fmt.Errorf("findmnt failed to start: %v", err.Error())
 	}
 
 	findmntScanner := bufio.NewScanner(findmntStdout)
 	findmntScanner.Split(bufio.ScanWords)
 	findmntScanner.Scan()
 	if findmntScanner.Err() != nil {
-		log.Fatalln("Couldn't read findnmnt output: ", findmntScanner.Err().Error())
+		return false, fmt.Errorf("couldn't read findnmnt output: %v", findmntScanner.Err().Error())
 	}
 
 	findmntText := findmntScanner.Text()
 	if err = findmntCmd.Wait(); err != nil {
 		_, isExitError := err.(*exec.ExitError)
 		if !isExitError {
-			log.Fatalln("findmnt failed: ", err.Error())
+			return false, fmt.Errorf("findmnt failed: %v", err.Error())
 		}
 	}
 
-	return findmntText == targetDir
+	return findmntText == targetDir, nil
 }
 
 func currentFormat(device string) (string, error) {
@@ -81,8 +80,8 @@ func Mount(targetDir string, device string, opt DefaultOptions) error {
 		return fmt.Errorf("not a block device: %v", device)
 	}
 
-	if isMounted(targetDir) {
-		return nil
+	if ok, err := isMounted(targetDir); err != nil || ok {
+		return err
 	}
 
 	format, err := currentFormat(device)
@@ -109,8 +108,8 @@ func Mount(targetDir string, device string, opt DefaultOptions) error {
 }
 
 func Unmount(targetDir string) error {
-	if !isMounted(targetDir) {
-		return nil
+	if ok, err := isMounted(targetDir); err != nil || !ok {
+		return err
 	}
 
 	umountCmd := exec.Command("umount", targetDir)
