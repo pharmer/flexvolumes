@@ -48,6 +48,7 @@ func NewRootCmd(version string) *cobra.Command {
 
 	rootCmd.AddCommand(NewCmdInit())
 	rootCmd.AddCommand(NewCmdAttach())
+	rootCmd.AddCommand(NewCmdMountDevice())
 	rootCmd.AddCommand(NewCmdMount())
 	rootCmd.AddCommand(NewCmdDetach())
 	rootCmd.AddCommand(NewCmdUnmount())
@@ -58,7 +59,7 @@ func NewRootCmd(version string) *cobra.Command {
 }
 
 func checkSupported(cmd string) {
-	supported := []string{"init", "attach", "detach", "mount", "unmount"}
+	supported := []string{"init", "attach", "detach", "mountdevice", "mount", "unmount"}
 	for _, s := range supported {
 		if s == cmd {
 			return

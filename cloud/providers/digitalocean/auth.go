@@ -13,6 +13,7 @@ import (
 
 const (
 	tokenEnv = "DO_ACCESS_TOKEN"
+	tokenKey = "token"
 )
 
 type TokenSource struct {
@@ -20,6 +21,12 @@ type TokenSource struct {
 }
 
 func getCredential() (*TokenSource, error) {
+	if t, err := util.ReadSecretKeyFromFile(SecretDefaultLocation, tokenKey); err == nil {
+		return &TokenSource{
+			AccessToken: t,
+		}, nil
+	}
+
 	if f, ok := os.LookupEnv(CredentialFileEnv); ok && f != "" {
 		cred, err := util.ReadCredentialFromFile(f, &TokenSource{})
 		if err != nil {

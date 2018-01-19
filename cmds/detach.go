@@ -30,6 +30,10 @@ func NewCmdDetach() *cobra.Command {
 				Error(errors.New("node name not found")).Print()
 			}
 
+			if err = cloud.Initialize(); err != nil {
+				Error(err).Print()
+			}
+
 			if err := cloud.Detach(device, nodeName); err != nil {
 				Error(err).Print()
 			}

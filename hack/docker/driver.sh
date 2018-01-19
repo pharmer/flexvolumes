@@ -14,7 +14,7 @@ if [ ! -d "/flexmnt/$driver_dir" ]; then
 fi
 
 echo $PROVIDER>"/flexsecret/provider"
-
+cp -a cloudsecret/. flexsecret/
 
 cp "/$DRIVER" "/flexmnt/$driver_dir/.$DRIVER"
 mv -f "/flexmnt/$driver_dir/.$DRIVER" "/flexmnt/$driver_dir/$DRIVER"
@@ -22,3 +22,5 @@ mv -f "/flexmnt/$driver_dir/.$DRIVER" "/flexmnt/$driver_dir/$DRIVER"
 while : ; do
   sleep 3600
 done
+
+

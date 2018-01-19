@@ -18,4 +18,4 @@ spec:
         driver: "pharmer/flexvolumes"
         fsType: "ext4"
         options:
-          volumeId: "volume id"
+          volumeId: "vol-id"

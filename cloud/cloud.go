@@ -17,8 +17,9 @@ type DefaultOptions struct {
 const (
 	CredentialFileEnv         = "CRED_FILE_PATH"
 	CredentialDefaultLocation = "/etc/kubernetes/cloud.json"
+	SecretDefaultLocation     = "/var/run/secrets/pharmer/flexvolmues"
 	RetryInterval             = 5 * time.Second
-	RetryTimeout              = 15 * time.Minute
+	RetryTimeout              = 10 * time.Minute
 )
 
 var ErrNotSupported = errors.New("Not Supported")
@@ -31,6 +32,7 @@ type Interface interface {
 	Init() error
 	Attach(options interface{}, nodeName string) (device string, err error)
 	Detach(device, nodeName string) error
-	Mount(mountDir string, device string, options interface{}) error
+	MountDevice(mountDir string, device string, options interface{}) error
+	Mount(mountDir string, options interface{}) error
 	Unmount(mountDir string) error
 }

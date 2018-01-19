@@ -101,7 +101,12 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 	return fmt.Errorf("could not find volume attached at %v", device)
 }
 
-func (v *VolumeManager) Mount(mountDir string, device string, options interface{}) error {
+func (v *VolumeManager) MountDevice(mountDir string, device string, options interface{}) error {
+	opt := options.(*DigitalOceanOptions)
+	return Mount(mountDir, device, opt.DefaultOptions)
+}
+
+func (v *VolumeManager) Mount(mountDir string, options interface{}) error {
 	opt := options.(*DigitalOceanOptions)
 
 	vol, _, err := v.client.Storage.GetVolume(oauth2.NoContext, opt.VolumeID)
@@ -109,7 +114,7 @@ func (v *VolumeManager) Mount(mountDir string, device string, options interface{
 		return err
 	}
 
-	device = DEVICE_PREFIX + vol.Name
+	device := DEVICE_PREFIX + vol.Name
 	return Mount(mountDir, device, opt.DefaultOptions)
 }
 

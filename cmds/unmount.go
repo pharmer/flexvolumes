@@ -24,6 +24,10 @@ func NewCmdUnmount() *cobra.Command {
 			}
 			dir := args[0]
 
+			if err = cloud.Initialize(); err != nil {
+				Error(err).Print()
+			}
+
 			if err := cloud.Unmount(dir); err != nil {
 				Error(err).Print()
 			}

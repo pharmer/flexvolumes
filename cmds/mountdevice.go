@@ -11,14 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCmdMount() *cobra.Command {
+func NewCmdMountDevice() *cobra.Command {
 	cfg := options.NewConfig()
 	cmd := &cobra.Command{
-		Use:               "mount",
-		Short:             "Mount the volume at the mount dir",
+		Use:               "mountdevice",
+		Short:             "Mount device mounts the device to a global path which individual pods can then bind mount.",
 		DisableAutoGenTag: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) <= 0 {
+			if len(args) <= 0 && len(args) > 3 {
 				Error(cloud.ErrIncorrectArgNumber).Print()
 			}
 			cloud, err := cloud.GetCloudManager(cfg.Provider, context.Background())
@@ -27,16 +27,17 @@ func NewCmdMount() *cobra.Command {
 			}
 
 			dir := args[0]
+			device := args[1]
 			opt := cloud.NewOptions()
-			if err := json.Unmarshal([]byte(args[1]), opt); err != nil {
-				Error(fmt.Errorf("could not parse options for attach; got %v", os.Args[1])).Print()
+			if err := json.Unmarshal([]byte(args[2]), opt); err != nil {
+				Error(fmt.Errorf("could not parse options for attach; got %v", os.Args[2])).Print()
 			}
 
 			if err = cloud.Initialize(); err != nil {
 				Error(err).Print()
 			}
 
-			if err := cloud.Mount(dir, opt); err != nil {
+			if err := cloud.MountDevice(dir, device, opt); err != nil {
 				Error(err).Print()
 			}
 			Success().Print()

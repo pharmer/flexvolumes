@@ -21,7 +21,8 @@ type DriverOutput struct {
 func Success() DriverOutput {
 	return DriverOutput{
 		DriverStatus: flexvolume.DriverStatus{
-			Status: flexvolume.StatusSuccess,
+			Status:  flexvolume.StatusSuccess,
+			Message: "Flex driver initialized",
 		},
 	}
 }
@@ -46,6 +47,14 @@ func Error(err error) DriverOutput {
 		output.Status = flexvolume.StatusNotSupported
 	}
 	return output
+}
+
+func (do DriverOutput) Capability() DriverOutput {
+	do.Capabilities = &flexvolume.DriverCapabilities{
+		Attach:         true,
+		SELinuxRelabel: true,
+	}
+	return do
 }
 
 func (do DriverOutput) Print() {

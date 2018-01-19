@@ -36,6 +36,10 @@ func NewCmdAttach() *cobra.Command {
 				Error(errors.New("node name not found")).Print()
 			}
 
+			if err = cloud.Initialize(); err != nil {
+				Error(err).Print()
+			}
+
 			device, err := cloud.Attach(opt, nodeName)
 			if err != nil {
 				Error(err).Print()

@@ -22,7 +22,7 @@ func NewCmdInit() *cobra.Command {
 			if err = cloud.Init(); err != nil {
 				Error(err).Print()
 			}
-			Success().Print()
+			Success().Capability().Print()
 		},
 	}
 	return cmd

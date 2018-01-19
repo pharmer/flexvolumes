@@ -3,6 +3,7 @@ package util
 import (
 	"io/ioutil"
 	"encoding/json"
+	"strings"
 )
 
 func ReadCredentialFromFile(file string, cred interface{}) (interface{}, error) {
@@ -16,4 +17,14 @@ func ReadCredentialFromFile(file string, cred interface{}) (interface{}, error) 
 	}
 	return cred, nil
 
+}
+
+func ReadSecretKeyFromFile(location, key string) (string, error)  {
+	file := strings.Join([]string{location, key}, "/")
+
+	k, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(k)), nil
 }
