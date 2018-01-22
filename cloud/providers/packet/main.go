@@ -2,8 +2,11 @@ package packet
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 
 	. "github.com/pharmer/flexvolumes/cloud"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type PacketOptions struct {
@@ -46,7 +49,7 @@ func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, er
 
 	isAttached := false
 	for _, v := range vol.Attachments {
-		if v.ID == device.ID {
+		if v.Device.ID == device.ID {
 			isAttached = true
 		}
 	}
@@ -56,11 +59,6 @@ func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, er
 		if err != nil {
 			return "", err
 		}
-
-		//TODO(sanjid): add wait here
-		/*if err = awaitAction(v.client, vol.ID, action); err != nil {
-			return "", err
-		}*/
 	}
 
 	return DEVICE_PREFIX + vol.Name, nil
@@ -79,10 +77,19 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 	isDetached := true
 	attachmentID := ""
 	for _, vid := range droplet.Volumes {
-		if vid.Name == device {
-			isDetached = false
-			attachmentID = vid.Attachments[0].ID
-			break
+		//Href:"/storage/870d1ba4-b705-4c0f-974d-92ee73b010db"
+		href := strings.Split(vid.Href, "/")
+		if len(href) > 0 {
+			id := href[len(href)-1]
+			volume, _, err := v.client.Volumes.Get(id)
+			if err != nil {
+				return err
+			}
+			if volume.Description == device {
+				isDetached = false
+				attachmentID = volume.Attachments[0].ID
+				break
+			}
 		}
 	}
 	if !isDetached {
@@ -90,18 +97,24 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 		if err != nil {
 			return err
 		}
+		return wait.PollImmediate(RetryInterval, RetryTimeout, func() (bool, error) {
+			at, _, _ := v.client.VolumeAttachments.Get(attachmentID)
+			if at == nil {
+				return true, nil
+			}
+			return false, nil
+		})
 
-		//TODO(sanjid): add wait here
-		/*if err = awaitAction(v.client, vol.ID, action); err != nil {
-			return err
-		}*/
-		return nil
 	}
 	return fmt.Errorf("could not find volume attached at %v", device)
 }
 
 func (v *VolumeManager) MountDevice(mountDir string, device string, options interface{}) error {
 	opt := options.(*PacketOptions)
+	cmd := exec.Command("packet-block-storage-attach", "-m", "queue")
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return Mount(mountDir, device, opt.DefaultOptions)
 }
 
@@ -110,5 +123,9 @@ func (v *VolumeManager) Mount(mountDir string, options interface{}) error {
 }
 
 func (v *VolumeManager) Unmount(mountDir string) error {
-	return Unmount(mountDir)
+	if err := Unmount(mountDir); err != nil {
+		return err
+	}
+	cmd := exec.Command("packet-block-storage-detach")
+	return cmd.Run()
 }
