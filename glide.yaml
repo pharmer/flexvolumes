@@ -12,13 +12,17 @@ import:
   vcs: git
   version: master
 - package: github.com/jpillora/go-ogle-analytics
+- package: github.com/packethost/packngo
+  version: master
 - package: github.com/spf13/cobra
   version: master
+- package: github.com/taoh/linodego
+  repo: https://github.com/appscode/linodego.git
+  version: master
+  vcs: git
 - package: golang.org/x/oauth2
 - package: golang.org/x/sys
 - package: k8s.io/apimachinery
   version: kubernetes-1.8.3
-- package: github.com/taoh/linodego
-  repo: https://github.com/appscode/linodego.git
-  version: volume
-  vcs: git
+- package: k8s.io/kubernetes
+  version: v1.8.3
