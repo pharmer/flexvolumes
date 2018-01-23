@@ -18,3 +18,7 @@ import:
 - package: golang.org/x/sys
 - package: k8s.io/apimachinery
   version: kubernetes-1.8.3
+- package: github.com/taoh/linodego
+  repo: https://github.com/appscode/linodego.git
+  version: volume
+  vcs: git

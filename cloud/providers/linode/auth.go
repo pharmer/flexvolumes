@@ -5,20 +5,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/taoh/linodego"
 	. "github.com/pharmer/flexvolumes/cloud"
 	"github.com/pharmer/flexvolumes/util"
+	"github.com/taoh/linodego"
 )
 
 const (
-	tokenEnv     = "LINODE_API_KEY"
-	apiToken       = "token"
+	tokenEnv = "LINODE_API_KEY"
+	apiToken = "token"
 )
 
 type TokenSource struct {
 	ApiToken string `json:"token"`
 }
-
 
 func getCredential() (*TokenSource, error) {
 	if t, err := util.ReadSecretKeyFromFile(SecretDefaultLocation, apiToken); err == nil {

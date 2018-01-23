@@ -1,10 +1,12 @@
 package linode
 
-import  (
+import (
 	"context"
-	"github.com/taoh/linodego"
+
 	. "github.com/pharmer/flexvolumes/cloud"
+	"github.com/taoh/linodego"
 )
+
 type VolumeManager struct {
 	ctx    context.Context
 	client *linodego.Client
@@ -14,7 +16,7 @@ var _ Interface = &VolumeManager{}
 
 const (
 	UID           = "linode"
-	DEVICE_PREFIX = "/dev/disk/by-id/scsi-0"
+	DEVICE_PREFIX = "/dev/disk/by-id/scsi-0Linode_Volume_"
 )
 
 func init() {

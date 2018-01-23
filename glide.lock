@@ -1,5 +1,5 @@
-hash: fe83cd7cf77f5dd3220629ae90efd0047c1e151f1eecb607f156f68aa363f560
-updated: 2018-01-22T10:48:28.759254579+06:00
+hash: 573d1887b27ea2c6e98a5d0b105021836b3007c06cdcecf36bc84752f3a56703
+updated: 2018-01-23T14:32:25.397958283+06:00
 imports:
 - name: github.com/appscode/go
   version: 99dbf420807d9459b63d1d0bf702537bb7aa976f
@@ -166,6 +166,8 @@ imports:
   version: 300106c228d52c8941d4b3de6054a6062a86dda3
 - name: github.com/shurcooL/sanitized_anchor_name
   version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
+- name: github.com/sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/spf13/afero
   version: b28a7effac979219c2a2ed6205a4d70e4b1bcd02
   subpackages:
@@ -177,6 +179,10 @@ imports:
   - doc
 - name: github.com/spf13/pflag
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: github.com/taoh/linodego
+  version: f823ca7fbdb2fa16356f2de58051e2fdf9122b3f
+  repo: https://github.com/appscode/linodego.git
+  vcs: git
 - name: github.com/tent/http-link-go
   version: ac974c61c2f990f4115b119354b5e0b47550e888
 - name: golang.org/x/crypto
@@ -208,9 +214,10 @@ imports:
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 95c6576299259db960f6c5b9b69ea52422860fce
+  version: 7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce
   subpackages:
   - unix
+  - windows
 - name: golang.org/x/text
   version: b19bf474d317b857955b12035d2c5acb57ce8b01
   subpackages:
@@ -267,7 +274,7 @@ imports:
   - storage/v1
   - storage/v1beta1
 - name: k8s.io/apiextensions-apiserver
-  version: 0b14e80bb6cc3e9b906083c8117103eb1496f7e5
+  version: 1bb7fdb7243fb39b607059e70cdeb4bcb0758998
   subpackages:
   - pkg/features
 - name: k8s.io/apimachinery
