@@ -18,7 +18,7 @@ var _ Interface = &VolumeManager{}
 
 const (
 	UID           = "lightsail"
-	DEVICE_PREFIX = "/dev/disk/by-id/scsi-0DO_Volume_"
+	DEVICE_PREFIX = "/dev/xvd"
 	metadataURL = "http://169.254.169.254/latest/meta-data/"
 )
 
