@@ -23,7 +23,7 @@ func TestFirstVolumeAttach(t *testing.T) {
 	}
 	res, err := v.Attach(&VultrOptions{
 		opts,
-	}, "94-pool-jaaq6g")
+	}, "94-pool-omtfjj")
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,7 +42,7 @@ func TestVolumeDetach(t *testing.T) {
 		VolumeName: "flextest",
 		VolumeID:   "13105873",
 	}
-	err := v.Detach(opts.VolumeName, "94-pool-jaaq6g")
+	err := v.Detach(opts.VolumeName, "94-pool-omtfjj")
 	if err != nil {
 		t.Error(err)
 	}
@@ -54,7 +54,7 @@ func TestNextDeviceName(t *testing.T) {
 		client: vultr.NewClient(tGetToken(), nil),
 	}
 
-	serverId, err := getServerID(v.client, "94-pool-jaaq6g")
+	serverId, err := getServerID(v.client, "94-pool-omtfjj")
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,6 +64,18 @@ func TestNextDeviceName(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println(name)
+}
+
+func TestVolumeResp(t *testing.T) {
+	v := VolumeManager{
+		ctx:    context.Background(),
+		client: vultr.NewClient(tGetToken(), nil),
+	}
+	blockStorageList, err := v.client.GetBlockStorages()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(blockStorageList)
 }
 
 func tGetToken() string {
@@ -83,3 +95,4 @@ func tReadFile(name string) ([]byte, error) {
 	}
 	return crtBytes, nil
 }
+

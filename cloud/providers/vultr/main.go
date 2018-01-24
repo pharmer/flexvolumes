@@ -42,23 +42,33 @@ func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, er
 	}
 
 	isAttached := false
-	if vol.AttachedTo == vol.ID {
+	if vol.AttachedTo == serverID {
 		isAttached = true
 	}
 
-	volName, err := getNextDeviceName(v.client, serverID)
-	if err != nil {
-		return "", err
-	}
-
+	var deviceName string
 	if !isAttached {
-		err := v.client.AttachBlockStorage(opt.VolumeID, serverID)
+		deviceName, err = getNextDeviceName(v.client, serverID)
+		if err != nil {
+			return "", err
+		}
+		err = v.client.AttachBlockStorage(opt.VolumeID, serverID)
+		if err != nil {
+			return "", err
+		}
+		err = writeDeviceName(vol.ID, deviceName)
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		deviceName, err = getDeviceName(vol.ID)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	return volName, nil
+	return deviceName, nil
 }
 
 func (v *VolumeManager) Detach(device, nodeName string) error {

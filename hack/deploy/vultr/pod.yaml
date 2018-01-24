@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "flexvolume-vultr"
+spec:
+  containers:
+    - name: "nginx"
+      image: "nginx"
+      ports:
+        - name: "http"
+          containerPort: 80
+      volumeMounts:
+        - name: "flextest"
+          mountPath: "/data"
+  volumes:
+    - name: "flextest"
+      flexVolume:
+        driver: "pharmer/flexvolumes"
+        fsType: "ext4"
+        options:
+          volumeId: "13105873"

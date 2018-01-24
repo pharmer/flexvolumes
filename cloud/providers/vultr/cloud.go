@@ -43,7 +43,8 @@ func getVolumeId(client *vultr.Client, volName string, serverID string) (string,
 
 //ref: https://www.vultr.com/docs/block-storage
 func getNextDeviceName(client *vultr.Client, serverId string) (string, error) {
-	blockStorageList, err := client.GetBlockStorages()
+	return "/dev/vdb", nil
+	/*blockStorageList, err := client.GetBlockStorages()
 	if err != nil {
 		return "", err
 	}
@@ -54,5 +55,21 @@ func getNextDeviceName(client *vultr.Client, serverId string) (string, error) {
 			nameSuffix++
 		}
 	}
-	return DEVICE_PREFIX + string(nameSuffix), nil
+	return DEVICE_PREFIX + string(nameSuffix), nil*/
+}
+
+//deviname is written in volID file
+func getDeviceName(volID string) (string, error) {
+	return "/dev/vdb", nil
+	//k, err := ioutil.ReadFile(volID)
+	//if err != nil {
+	//	return "", err
+	//}
+	//return strings.TrimSpace(string(k)), nil
+}
+
+func writeDeviceName(volID string, name string) error {
+	return nil
+	//err := ioutil.WriteFile(volID, []byte(name), 0777)
+	//return err
 }
