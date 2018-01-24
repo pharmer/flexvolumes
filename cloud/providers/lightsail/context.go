@@ -1,12 +1,10 @@
 package lightsail
 
-
 import (
 	"context"
 
-
-	. "github.com/pharmer/flexvolumes/cloud"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	. "github.com/pharmer/flexvolumes/cloud"
 )
 
 type VolumeManager struct {
@@ -19,7 +17,7 @@ var _ Interface = &VolumeManager{}
 const (
 	UID           = "lightsail"
 	DEVICE_PREFIX = "/dev/xvd"
-	metadataURL = "http://169.254.169.254/latest/meta-data/"
+	metadataURL   = "http://169.254.169.254/latest/meta-data/"
 )
 
 func init() {
@@ -30,4 +28,3 @@ func init() {
 func New(ctx context.Context) Interface {
 	return &VolumeManager{ctx: ctx}
 }
-

@@ -26,3 +26,5 @@ import:
   version: kubernetes-1.8.3
 - package: k8s.io/kubernetes
   version: v1.8.3
+- package: github.com/aws/aws-sdk-go
+  version: v1.12.33

@@ -2,12 +2,12 @@ package lightsail
 
 import (
 	"fmt"
-	"net/http"
 	"io/ioutil"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	_aws "github.com/aws/aws-sdk-go/aws"
-)
+	"net/http"
 
+	_aws "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lightsail"
+)
 
 func instanceByName(client *lightsail.Lightsail, nodeName string) (*lightsail.Instance, error) {
 	host, err := client.GetInstance(&lightsail.GetInstanceInput{
@@ -23,35 +23,35 @@ func instanceByName(client *lightsail.Lightsail, nodeName string) (*lightsail.In
 
 }
 
-func getDiskByName(client *lightsail.Lightsail, name string)(*lightsail.Disk, error)  {
+func getDiskByName(client *lightsail.Lightsail, name string) (*lightsail.Disk, error) {
 	resp, err := client.GetDisk(&lightsail.GetDiskInput{
-		DiskName: _aws.String("flextest"),
+		DiskName: _aws.String(name),
 	})
 	if err != nil {
 		return nil, err
 	}
-	if resp.Disk != nil {
+	if resp.Disk == nil {
 		return nil, fmt.Errorf("no volume found with %v volName", name)
 	}
 	return resp.Disk, nil
 
 }
 
-
 func getMountDevicePath(ins *lightsail.Instance) (string, error) {
 	deviceMappings := make(map[string]bool, 0)
-
 	for _, disk := range ins.Hardware.Disks {
 		deviceMappings[_aws.StringValue(disk.Path)] = true
 	}
-	for i:= 103; i<= 123; i++ {
-
+	for i := 102; i <= 122; i++ {
+		path := DEVICE_PREFIX + string((i))
+		if _, found := deviceMappings[path]; !found {
+			return path, nil
+		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("no available device path found")
 
 }
-
 
 func getRegion() (string, error) {
 	zone, err := getAvailabilityZone()
@@ -80,7 +80,6 @@ func getAvailabilityZone() (string, error) {
 	zone := "placement/availability-zone"
 	return GetMetadata(zone)
 }
-
 
 func GetMetadata(path string) (string, error) {
 	resp, err := http.Get(metadataURL + path)

@@ -1,5 +1,5 @@
-hash: 8ca2ff13a25d8cc468a7a40ac5d4fd8537efa70f411e9179a2d0397b0cf3fef5
-updated: 2018-01-23T02:12:25.583721729-08:00
+hash: bfbb049b11afaab378287b11debb9587cbe4b9e1d1ae134a94a4fea873648ed0
+updated: 2018-01-24T13:04:51.960725161+06:00
 imports:
 - name: github.com/appscode/go
   version: 99dbf420807d9459b63d1d0bf702537bb7aa976f
@@ -10,10 +10,39 @@ imports:
   - runtime
   - version
 - name: github.com/appscode/kutil
-  version: de69f2e242cc9e4df5dcf41d0d314e5fce818154
+  version: e5498017a554e4d6c848eaef0d2f29c4b59e31b9
   subpackages:
   - meta
   - tools/analytics
+- name: github.com/aws/aws-sdk-go
+  version: cd721c97ef6fcfcb76b4feb14fcfead57fb01e5e
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/awsutil
+  - aws/client
+  - aws/client/metadata
+  - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
+  - aws/credentials/stscreds
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/session
+  - aws/signer/v4
+  - internal/shareddefaults
+  - private/protocol
+  - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/xml/xmlutil
+  - service/lightsail
+  - service/sts
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
   subpackages:
@@ -47,6 +76,8 @@ imports:
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/ghodss/yaml
   version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
+- name: github.com/go-ini/ini
+  version: 2e44421e256d82ebbf3d4d4fcabe8930b905eff3
 - name: github.com/go-openapi/jsonpointer
   version: 46af16f9f7b149af66e5d1bd010e3574dc06de98
 - name: github.com/go-openapi/jsonreference
@@ -102,7 +133,7 @@ imports:
   subpackages:
   - diskcache
 - name: github.com/hashicorp/go-version
-  version: 1b1de86cf2ec13494b6814b48157884efaf71c54
+  version: 39c2af67036e26c310812b838b652cd91f66c9a7
   repo: https://github.com/appscode/go-version.git
   vcs: git
 - name: github.com/hashicorp/golang-lru
@@ -111,6 +142,8 @@ imports:
   - simplelru
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/jmespath/go-jmespath
+  version: 3433f3ea46d9f8019119e7dd41274e112a2359a9
 - name: github.com/jpillora/go-ogle-analytics
   version: 14b04e0594ef6a9fd943363b135656f0ec8c9d0e
 - name: github.com/json-iterator/go

@@ -21,7 +21,7 @@ spec:
               privileged: true
           env:
             - name: PROVIDER
-              value: linode
+              value: lightsail
           volumeMounts:
             - mountPath: /flexmnt
               name: flexvolume-mount
@@ -38,4 +38,4 @@ spec:
             path: /var/run/secrets/pharmer/flexvolmues
         - name: cloud-secret
           secret:
-            secretName: linode
+            secretName: lightsail

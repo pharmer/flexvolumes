@@ -1,9 +1,9 @@
 package lightsail
 
 import (
-	"fmt"
 	. "github.com/pharmer/flexvolumes/cloud"
 	//"github.com/aws/aws-sdk-go/service/lightsail"
+	_aws "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 )
 
@@ -47,26 +47,31 @@ func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, er
 
 	isAttached := false
 
-	if disk.AttachedTo == instance.Name {
+	var path string
+	if *disk.AttachedTo == *instance.Name {
 		isAttached = true
+		path = _aws.StringValue(disk.Path)
 	}
 	if !isAttached {
-		v.client.AttachDisk(&lightsail.AttachDiskInput{
-			DiskName: disk.Name,
+		path, err = getMountDevicePath(instance)
+		if err != nil {
+			return "", err
+		}
+		_, err := v.client.AttachDisk(&lightsail.AttachDiskInput{
+			DiskName:     disk.Name,
 			InstanceName: instance.Name,
+			DiskPath:     _aws.String(path),
 		})
-		//v.client.attachdi
+		if err != nil {
+			return "", err
+		}
 	}
 
-
-
-
-
-	return DEVICE_PREFIX + opt.VolumeID, nil
+	return path, nil
 }
 
 func (v *VolumeManager) Detach(device, nodeName string) error {
-	return fmt.Errorf("could not find volume attached at %v", device)
+	return ErrNotSupported
 }
 
 func (v *VolumeManager) MountDevice(mountDir string, device string, options interface{}) error {
