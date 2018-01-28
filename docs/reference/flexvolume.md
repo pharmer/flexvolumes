@@ -42,6 +42,7 @@ Pharm flexvolume by Appscode - Start farms
 * [flexvolume detach](/docs/reference/flexvolume_detach.md)	 - Detach the volume from the Kubelet node
 * [flexvolume init](/docs/reference/flexvolume_init.md)	 - Initializes the driver.
 * [flexvolume mount](/docs/reference/flexvolume_mount.md)	 - Mount the volume at the mount dir
+* [flexvolume mountdevice](/docs/reference/flexvolume_mountdevice.md)	 - Mount device mounts the device to a global path which individual pods can then bind mount.
 * [flexvolume unmount](/docs/reference/flexvolume_unmount.md)	 - Unmount the volume
 * [flexvolume version](/docs/reference/flexvolume_version.md)	 - Prints binary version number.
 

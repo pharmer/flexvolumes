@@ -25,14 +25,13 @@ func TestVloume(t *testing.T) {
 	ins, err := instanceByName(client, "medium-1-0-pool-d5oi7g")
 
 	fmt.Println(*ins, err)
-	fmt.Println(*resp.Disk.AttachedTo== *ins.Name)
+	fmt.Println(*resp.Disk.AttachedTo == *ins.Name)
 	/*re, err := client.AttachDisk(&lightsail.AttachDiskInput{
 		DiskName: resp.Disk.Name,
 		InstanceName: ins.Name,
 		DiskPath: _aws.String("/dev/xvdf"),
 	})
 	fmt.Println(*re, err)*/
-
 
 	r, e := client.DetachDisk(&lightsail.DetachDiskInput{
 		DiskName: _aws.String("flextest"),

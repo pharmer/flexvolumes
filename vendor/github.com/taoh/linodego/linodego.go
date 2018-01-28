@@ -56,6 +56,9 @@ type Client struct {
 	Disk        *LinodeDiskService
 	StackScript *StackScriptService
 	Volume      *LinodeVolumeService
+	NodeBalancer *NodeBalancerService
+	NodeBalancerConfig *NodeBalancerConfigService
+	Node *NodeBalancerNodeService
 }
 
 // Creates a new Linode client object.
@@ -83,6 +86,9 @@ func NewClient(AccessKey string, httpClient *http.Client) *Client {
 	c.Disk = &LinodeDiskService{client: c}
 	c.StackScript = &StackScriptService{client: c}
 	c.Volume = &LinodeVolumeService{client: c}
+	c.NodeBalancer = &NodeBalancerService{client:c}
+	c.NodeBalancerConfig = &NodeBalancerConfigService{client: c}
+	c.Node = &NodeBalancerNodeService{client:c}
 	return c
 }
 
