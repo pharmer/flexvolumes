@@ -95,4 +95,3 @@ func tReadFile(name string) ([]byte, error) {
 	}
 	return crtBytes, nil
 }
-
