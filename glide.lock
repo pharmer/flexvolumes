@@ -1,5 +1,5 @@
 hash: 26e8d9c4453e9c116a990bff039cbff12d62b3b23e68b7047fca77ba41b5d57c
-updated: 2018-01-31T02:54:56.955880386-08:00
+updated: 2018-01-31T03:29:29.817450609-08:00
 imports:
 - name: github.com/appscode/go
   version: 99dbf420807d9459b63d1d0bf702537bb7aa976f
@@ -219,7 +219,7 @@ imports:
 - name: github.com/spf13/pflag
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/taoh/linodego
-  version: 5f0faa1e1599da1906d23b58647c27983d51db04
+  version: d85493a2eaad404c21b1582ce1dc75e745a4ead5
   repo: https://github.com/appscode/linodego.git
   vcs: git
 - name: github.com/tent/http-link-go
@@ -283,7 +283,7 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/api
-  version: 11147472b7c934c474a2c484af3c0c5210b7a3af
+  version: 9fc595375ab38f53cbc3a53026ac40fb44ad50ca
   subpackages:
   - admissionregistration/v1alpha1
   - admissionregistration/v1beta1
