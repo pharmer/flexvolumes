@@ -11,8 +11,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+var ExecCommand = exec.Command
+var UnixStat = unix.Stat
+
 func isMounted(targetDir string) (bool, error) {
-	findmntCmd := exec.Command("findmnt", "-n", targetDir)
+	findmntCmd := ExecCommand("findmnt", "-n", targetDir)
 	findmntStdout, err := findmntCmd.StdoutPipe()
 	if err != nil {
 		return false, fmt.Errorf("could not get findmount stdout pipe: %v", err.Error())
@@ -42,7 +45,7 @@ func isMounted(targetDir string) (bool, error) {
 
 func currentFormat(device string) (string, error) {
 
-	lsblkCmd := exec.Command("lsblk", "-n", "-o", "FSTYPE", device)
+	lsblkCmd := ExecCommand("lsblk", "-n", "-o", "FSTYPE", device)
 	lsblkOut, err := lsblkCmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("lsblk -n -o FSTYPE %s: output[%s] error[%s]", device, string(lsblkOut), err.Error())
@@ -72,7 +75,7 @@ func Mount(targetDir string, device string, opt DefaultOptions) error {
 	}
 
 	var res unix.Stat_t
-	if err := unix.Stat(device, &res); err != nil {
+	if err := UnixStat(device, &res); err != nil {
 		return err
 	}
 
@@ -89,7 +92,7 @@ func Mount(targetDir string, device string, opt DefaultOptions) error {
 		return err
 	}
 	if format != fsType {
-		mkfsCmd := exec.Command("mkfs", "-t", fsType, device)
+		mkfsCmd := ExecCommand("mkfs", "-t", fsType, device)
 		if mkfsOut, err := mkfsCmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("could not mkfs: %v Output: %v", err.Error(), string(mkfsOut))
 		}
@@ -99,7 +102,7 @@ func Mount(targetDir string, device string, opt DefaultOptions) error {
 		return err
 	}
 
-	mountCmd := exec.Command("mount", device, targetDir)
+	mountCmd := ExecCommand("mount", device, targetDir)
 	if mountOut, err := mountCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("could not mount: %v Output: %v", err.Error(), string(mountOut))
 	}
@@ -108,11 +111,12 @@ func Mount(targetDir string, device string, opt DefaultOptions) error {
 }
 
 func Unmount(targetDir string) error {
-	if ok, err := isMounted(targetDir); err != nil || !ok {
+	ok, err := isMounted(targetDir)
+	if err != nil || !ok {
 		return err
 	}
 
-	umountCmd := exec.Command("umount", targetDir)
+	umountCmd := ExecCommand("umount", targetDir)
 	if umountOut, err := umountCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("could not umount: %v Output: %v", err.Error(), string(umountOut))
 	}

@@ -8,6 +8,11 @@ import (
 	"context"
 	"github.com/pharmer/flexvolumes/cloud"
 	"strings"
+	"reflect"
+
+	"os/exec"
+	"os"
+	"golang.org/x/sys/unix"
 )
 
 type fakeLinodeVolumeService struct {
@@ -136,15 +141,20 @@ func newFakeVolume() linodego.Volume  {
 }
 
 func Test_Attach(t *testing.T) {
-	fakeVol := &fakeLinodeVolumeService{}
-	fakeVol.listFn = func(i int) (*linodego.LinodeVolumeListResponse, error) {
+	listVFn := func(i int) (*linodego.LinodeVolumeListResponse, error) {
 		volume := newFakeVolume()
+		if i != 0 && volume.VolumeId != i {
+			return &linodego.LinodeVolumeListResponse{
+				newFakeOKResponse("volume.list"),
+				[]linodego.Volume{},
+			}, nil
+		}
 		return &linodego.LinodeVolumeListResponse{
 			newFakeOKResponse("volume.list"),
 			[]linodego.Volume{volume},
 		}, nil
 	}
-	fakeVol.updateFn = func(i int, strings map[string]string) (*linodego.LinodeVolumeResponse, error) {
+	updateVFn := func(i int, strings map[string]string) (*linodego.LinodeVolumeResponse, error) {
 		vol := newFakeVolume()
 		linode := strings["LinodeID"]
 		if linode != "1234" {
@@ -159,8 +169,7 @@ func Test_Attach(t *testing.T) {
 		}, nil
 	}
 
-	fakeLinode := &fakeLinodeService{}
-	fakeLinode.listFunc = func(i int) (*linodego.LinodesListResponse, error) {
+	listLFunc := func(i int) (*linodego.LinodesListResponse, error) {
 		linode := newFakeLinode()
 		linodes := []linodego.Linode{linode}
 		return &linodego.LinodesListResponse{
@@ -169,29 +178,294 @@ func Test_Attach(t *testing.T) {
 		}, nil
 	}
 
-	fakeJob := &fakeLinodeJobService{}
-	fakeJob.listFn = func(i int, i2 int, b bool) (*linodego.LinodesJobListResponse, error) {
+	listJFn := func(i int, i2 int, b bool) (*linodego.LinodesJobListResponse, error) {
 		return &linodego.LinodesJobListResponse{
 			newFakeOKResponse("linode.job.list"),
 			[]linodego.Job{},
 		}, nil
 	}
 
-	fakeClient := newFakeClient(fakeVol, fakeLinode, fakeJob)
-	v := &VolumeManager{ctx:context.Background(), client:fakeClient}
-
-	options := &LinodeOptions{
-		DefaultOptions: cloud.DefaultOptions{
-			VolumeID: "987",
+	testcases := []struct {
+		name      string
+		listVFn func(int) (*linodego.LinodeVolumeListResponse, error)
+		updateVFn func(int, map[string]string) (*linodego.LinodeVolumeResponse, error)
+		listLFn     func(int) (*linodego.LinodesListResponse, error)
+		listJFn func(int, int, bool) (*linodego.LinodesJobListResponse, error)
+		options *LinodeOptions
+		device string
+		err error
+	}{
+		{
+			"volume attach with id",
+			listVFn,
+			updateVFn,
+			listLFunc,
+			listJFn,
+			&LinodeOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "987",
+				},
+			},
+			DEVICE_PREFIX,
+			nil,
 		},
-	}
-	device, err := v.Attach(options, "test-linode")
-	if err != nil {
-		t.Errorf("unexpected err, expected nil. got: %v", err)
-	}
-	if !strings.HasPrefix(device, DEVICE_PREFIX) {
-		t.Errorf("unexpected device prefix, expected %s, got %s", DEVICE_PREFIX, device)
+		{
+			"volume attach with name",
+			listVFn,
+			updateVFn,
+			listLFunc,
+			listJFn,
+			&LinodeOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeName: "test-volume",
+				},
+			},
+			DEVICE_PREFIX,
+			nil,
+		},
+		{
+			"volume not exists",
+			listVFn,
+			updateVFn,
+			listLFunc,
+			listJFn,
+			&LinodeOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "1111",
+				},
+			},
+			"",
+			 fmt.Errorf("no volume found with id %v", 1111),
+		},
+
 	}
 
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			fakeV := &fakeLinodeVolumeService{
+				listFn: test.listVFn,
+				updateFn: test.updateVFn,
+			}
+			fakeL := &fakeLinodeService{
+				listFunc: test.listLFn,
+			}
+			fakeJ := &fakeLinodeJobService{
+				listFn:test.listJFn,
+			}
+			fakeClient := newFakeClient(fakeV, fakeL, fakeJ)
+			v := &VolumeManager{ctx:context.Background(), client:fakeClient}
+
+			device, err := v.Attach(test.options, "test-linode")
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected nil. got: %v", err)
+			}
+			if !strings.HasPrefix(device, test.device) {
+				t.Errorf("unexpected device prefix, expected %s, got %s", DEVICE_PREFIX, device)
+			}
+		})
+	}
 
 }
+
+func Test_Detach(t *testing.T) {
+	listVFn := func(i int) (*linodego.LinodeVolumeListResponse, error) {
+		volume := newFakeVolume()
+		if i != 0 && volume.VolumeId != i {
+			return &linodego.LinodeVolumeListResponse{
+				newFakeOKResponse("volume.list"),
+				[]linodego.Volume{},
+			}, nil
+		}
+		volume.LinodeId = 1234
+		return &linodego.LinodeVolumeListResponse{
+			newFakeOKResponse("volume.list"),
+			[]linodego.Volume{volume},
+		}, nil
+	}
+	updateVFn := func(i int, strings map[string]string) (*linodego.LinodeVolumeResponse, error) {
+		vol := newFakeVolume()
+		if i != vol.VolumeId {
+			return nil, fmt.Errorf("volume not found")
+		}
+		return &linodego.LinodeVolumeResponse{
+			newFakeOKResponse("volume.update"),
+			linodego.VolumeId{i},
+		}, nil
+	}
+	listLFunc := func(i int) (*linodego.LinodesListResponse, error) {
+		linode := newFakeLinode()
+		if i!= 0 && linode.LinodeId != i {
+			return &linodego.LinodesListResponse{
+				newFakeOKResponse("linode.list"),
+				[]linodego.Linode{},
+			}, nil
+		}
+		linodes := []linodego.Linode{linode}
+		return &linodego.LinodesListResponse{
+			newFakeOKResponse("linode.list"),
+			linodes,
+		}, nil
+	}
+	listJFn := func(i int, i2 int, b bool) (*linodego.LinodesJobListResponse, error) {
+		return &linodego.LinodesJobListResponse{
+			newFakeOKResponse("linode.job.list"),
+			[]linodego.Job{},
+		}, nil
+	}
+	testcases := []struct {
+		name      string
+		listVFn func(int) (*linodego.LinodeVolumeListResponse, error)
+		updateVFn func(int, map[string]string) (*linodego.LinodeVolumeResponse, error)
+		listLFn     func(int) (*linodego.LinodesListResponse, error)
+		listJFn func(int, int, bool) (*linodego.LinodesJobListResponse, error)
+		device string
+		nodeName string
+		err error
+	}{
+		{
+			"volume detach",
+			listVFn,
+			updateVFn,
+			listLFunc,
+			listJFn,
+			"test-volume",
+			"test-linode",
+			nil,
+		},
+		{
+			"volume not attached",
+			func(i int) (*linodego.LinodeVolumeListResponse, error) {
+				volume := newFakeVolume()
+				return &linodego.LinodeVolumeListResponse{
+					newFakeOKResponse("volume.list"),
+					[]linodego.Volume{volume},
+				}, nil
+			},
+			updateVFn,
+			listLFunc,
+			listJFn,
+			"test-volume",
+			"test-linode",
+			fmt.Errorf("could not find volume attached at %v", "test-volume"),
+		},
+	}
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			fakeV := &fakeLinodeVolumeService{
+				listFn: test.listVFn,
+				updateFn: test.updateVFn,
+			}
+			fakeL := &fakeLinodeService{
+				listFunc: test.listLFn,
+			}
+			fakeJ := &fakeLinodeJobService{
+				listFn:test.listJFn,
+			}
+			fakeClient := newFakeClient(fakeV, fakeL, fakeJ)
+			v := &VolumeManager{ctx:context.Background(), client:fakeClient}
+
+			err := v.Detach(test.device, test.nodeName)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected nil. got: %v", err)
+			}
+		})
+	}
+
+}
+
+// https://npf.io/2015/06/testing-exec-command/
+func fakeExecCommand(command string, args ...string) *exec.Cmd {
+	cs := []string{"-test.run=TestHelperProcess", "--", command}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	//testing: warning: no tests to run
+	return cmd
+}
+
+func fakeUnixStat(path string, stat *unix.Stat_t) error  {
+	stat.Mode = unix.S_IFBLK
+	return nil
+}
+
+func TestMount(t *testing.T) {
+	opt := &LinodeOptions{
+		DefaultOptions: cloud.DefaultOptions{
+			VolumeID: "987",
+			FsType: "ext4",
+			RW: "rw",
+			VolumeName: "test-volume",
+		},
+	}
+	testcases := []struct {
+		name      string
+		options *LinodeOptions
+		mountDir string
+		device string
+		err error
+	}{
+		{
+			"mount device",
+			opt,
+			"/tmp/mount",
+			"test-volume",
+			nil,
+		},
+		{
+			"fs type not specified",
+			&LinodeOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "987",
+					RW: "rw",
+					VolumeName: "test-volume",
+				},
+			},
+			"/tmp/mount",
+			"test-volume",
+			fmt.Errorf("No filesystem type specified"),
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			cloud.ExecCommand = fakeExecCommand
+			cloud.UnixStat = fakeUnixStat
+			fakeClient := newFakeClient(nil, nil, nil)
+			v := &VolumeManager{ctx:context.Background(), client:fakeClient}
+
+			err := v.MountDevice(test.mountDir, test.device, test.options)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected %v. got: %v", test.err, err)
+			}
+		})
+	}
+
+}
+
+func Test_Unmount(t *testing.T) {
+	testcases := []struct {
+		name      string
+		mountDir string
+		err error
+	}{
+		{
+			"mount device",
+			"/tmp/mount",
+			nil,
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			cloud.ExecCommand = fakeExecCommand
+			fakeClient := newFakeClient(nil, nil, nil)
+			v := &VolumeManager{ctx:context.Background(), client:fakeClient}
+
+			err := v.Unmount(test.mountDir)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected nil. got: %v", err)
+			}
+		})
+	}
+}
+
