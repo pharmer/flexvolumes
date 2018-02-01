@@ -2,18 +2,20 @@ package digitalocean
 
 import (
 	"bytes"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"testing"
 
-	"k8s.io/api/core/v1"
-
 	"github.com/digitalocean/godo"
 	"github.com/digitalocean/godo/context"
 	"time"
 	"fmt"
+	"github.com/pharmer/flexvolumes/cloud"
+	"strings"
+	"os/exec"
+	"os"
+	"golang.org/x/sys/unix"
 )
 
 type fakeDropletService struct {
@@ -149,7 +151,7 @@ func (f *fakeStorageActionsService) List(ctx context.Context, volumeID string, o
 func (f *fakeStorageActionsService) Resize(ctx context.Context, volumeID string, sizeGigabytes int, regionSlug string) (*godo.Action, *godo.Response, error) {
 	return f.resizeFn(ctx, volumeID, sizeGigabytes, regionSlug)
 }
-func newFakeLBClient(fakeStorage *fakeStorageService, fakeStorageAction *fakeStorageActionsService, fakeDroplet *fakeDropletService) *godo.Client {
+func newFakeClient(fakeStorage *fakeStorageService, fakeStorageAction *fakeStorageActionsService, fakeDroplet *fakeDropletService) *godo.Client {
 	client := godo.NewClient(nil)
 	client.Droplets = fakeDroplet
 	client.Storage = fakeStorage
@@ -217,7 +219,7 @@ func Test_Attach(t *testing.T) {
 		if vol.ID == volumeId {
 			return vol, newFakeOKResponse(), nil
 		}
-		return &godo.Volume{}, newFakeNotOKResponse(), nil
+		return &godo.Volume{}, newFakeNotOKResponse(), fmt.Errorf("volume with id %v not exists", volumeId)
 	}
 
 	listDropletFn := func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error) {
@@ -235,8 +237,351 @@ func Test_Attach(t *testing.T) {
 		}
 		return nil, newFakeNotOKResponse(), fmt.Errorf("no droplet found with id %v", dropletID)
 	}
+	attachStorageActions := func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error) {
+		return &godo.Action{
+			Status: godo.ActionCompleted,
+		}, newFakeOKResponse(), nil
+	}
+	getStorageActions := func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error) {
+		return &godo.Action{
+			Status: godo.ActionCompleted,
+		}, newFakeOKResponse(), nil
+	}
+
+	testcases := []struct{
+		name string
+		getVolumeFn func(context.Context, string) (*godo.Volume, *godo.Response, error)
+		listDFunc           func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error)
+		getDFunc            func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error)
+		attachFn func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
+		getSAFn func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
+		options *DigitalOceanOptions
+		nodeName string
+		device string
+		err error
+	}{
+		{
+			"volume attach",
+			getVolumeFn,
+			listDropletFn,
+			getDropletFunc,
+			attachStorageActions,
+			getStorageActions,
+			&DigitalOceanOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "80d414c6-295e-4e3a-ac58-eb9456c1e1d1",
+				},
+			},
+			"test-droplet",
+			DEVICE_PREFIX,
+			nil,
+		},
+		{
+			"volume does not exist",
+			getVolumeFn,
+			listDropletFn,
+			getDropletFunc,
+			attachStorageActions,
+			getStorageActions,
+			&DigitalOceanOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "test-volume",
+				},
+			},
+			"test-droplet",
+			"",
+			fmt.Errorf("volume with id test-volume not exists"),
+		},
+		{
+			"node does not exist",
+			getVolumeFn,
+			listDropletFn,
+			getDropletFunc,
+			attachStorageActions,
+			getStorageActions,
+			&DigitalOceanOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "80d414c6-295e-4e3a-ac58-eb9456c1e1d1",
+				},
+			},
+			"node-1",
+			"",
+			fmt.Errorf("no droplet found with node-1 name"),
+		},
+		{
+			"volume attach fail",
+			getVolumeFn,
+			listDropletFn,
+			getDropletFunc,
+			func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error) {
+				return &godo.Action{
+					Status: godo.ActionInProgress,
+				}, newFakeOKResponse(), nil
+			},
+			func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error) {
+				return &godo.Action{
+					Status: "errored",
+				}, newFakeOKResponse(), nil
+			},
+			&DigitalOceanOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID: "80d414c6-295e-4e3a-ac58-eb9456c1e1d1",
+				},
+			},
+			"test-droplet",
+			"",
+			fmt.Errorf(`attach failed: godo.Action{ID:0, Status:"errored", Type:"", ResourceID:0, ResourceType:"", RegionSlug:""}`),
+		},
+
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			fakeD := &fakeDropletService{
+				getFunc: test.getDFunc,
+				listFunc: test.listDFunc,
+			}
+			fakeS := &fakeStorageService{
+				getVolumeFn:   test.getVolumeFn,
+			}
+			fakeSA := &fakeStorageActionsService{
+				attachFn: test.attachFn,
+				getFn: test.getSAFn,
+			}
+
+			fakeClient := newFakeClient(fakeS, fakeSA, fakeD)
+			v := &VolumeManager{ctx: context.Background(), client: fakeClient}
+
+			device, err := v.Attach(test.options, test.nodeName)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected nil. got: %v", err)
+			}
+			if !strings.HasPrefix(device, test.device) {
+				t.Errorf("unexpected device prefix, expected %s, got %s", DEVICE_PREFIX, device)
+			}
+		})
+	}
 
 }
 
 
+func Test_Detach(t *testing.T) {
+	listDropletFn := func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error) {
+		droplet := newFakeDroplet()
+		vol := newFakeVolume()
+		droplet.VolumeIDs = []string{vol.ID}
+		droplets := []godo.Droplet{*droplet}
 
+		resp := newFakeOKResponse()
+		return droplets, resp, nil
+	}
+	getDropletFunc := func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error) {
+		droplet := newFakeDroplet()
+		if droplet.ID == dropletID {
+			vol := newFakeVolume()
+			droplet.VolumeIDs = []string{vol.ID}
+			resp := newFakeOKResponse()
+			return droplet, resp, nil
+		}
+		return nil, newFakeNotOKResponse(), fmt.Errorf("no droplet found with id %v", dropletID)
+	}
+	listVolumeFn := func(context.Context, *godo.ListVolumeParams) ([]godo.Volume, *godo.Response, error) {
+		vol := newFakeVolume()
+		return []godo.Volume{*vol}, newFakeOKResponse(), nil
+
+	}
+	detachStorageActions := func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error) {
+		return &godo.Action{
+			Status: godo.ActionCompleted,
+		}, newFakeOKResponse(), nil
+	}
+	getStorageActions := func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error) {
+		return &godo.Action{
+			Status: godo.ActionCompleted,
+		}, newFakeOKResponse(), nil
+	}
+
+	testcases := []struct{
+		name string
+		listDFunc           func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error)
+		getDFunc            func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error)
+		listVolumesFn func(context.Context, *godo.ListVolumeParams) ([]godo.Volume, *godo.Response, error)
+		detachByDropletIDFn func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
+		getSAFn func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
+		nodeName string
+		device string
+		err error
+	}{
+		{
+			"volume detach",
+			listDropletFn,
+			getDropletFunc,
+			listVolumeFn,
+			detachStorageActions,
+			getStorageActions,
+			"test-droplet",
+			"test-volume",
+			nil,
+		},
+		{
+			"volume not attached",
+			listDropletFn,
+			func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error) {
+				droplet := newFakeDroplet()
+				if droplet.ID == dropletID {
+					resp := newFakeOKResponse()
+					return droplet, resp, nil
+				}
+				return nil, newFakeNotOKResponse(), fmt.Errorf("no droplet found with id %v", dropletID)
+			},
+			listVolumeFn,
+			detachStorageActions,
+			getStorageActions,
+			"test-droplet",
+			"test-volume",
+			fmt.Errorf("could not find volume attached at test-volume"),
+		},
+		{
+			"volume detach fail",
+			listDropletFn,
+			getDropletFunc,
+			listVolumeFn,
+			func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error) {
+				return &godo.Action{
+					Status: godo.ActionInProgress,
+				}, newFakeOKResponse(), nil
+			},
+			func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error) {
+				return &godo.Action{
+					Status: "errored",
+				}, newFakeOKResponse(), nil
+			},
+			"test-droplet",
+			"test-volume",
+			fmt.Errorf(`attach failed: godo.Action{ID:0, Status:"errored", Type:"", ResourceID:0, ResourceType:"", RegionSlug:""}`),
+		},
+
+	}
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			fakeD := &fakeDropletService{
+				getFunc: test.getDFunc,
+				listFunc: test.listDFunc,
+			}
+			fakeS := &fakeStorageService{
+				listVolumesFn:   test.listVolumesFn,
+			}
+			fakeSA := &fakeStorageActionsService{
+				detachByDropletIDFn: test.detachByDropletIDFn,
+				getFn: test.getSAFn,
+			}
+
+			fakeClient := newFakeClient(fakeS, fakeSA, fakeD)
+			v := &VolumeManager{ctx: context.Background(), client: fakeClient}
+
+			err := v.Detach(test.device, test.nodeName)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected nil. got: %v", err)
+			}
+
+		})
+	}
+
+}
+
+
+// https://npf.io/2015/06/testing-exec-command/
+func fakeExecCommand(command string, args ...string) *exec.Cmd {
+	cs := []string{"-test.run=TestHelperProcess", "--", command}
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	//testing: warning: no tests to run
+	return cmd
+}
+
+func fakeUnixStat(path string, stat *unix.Stat_t) error {
+	stat.Mode = unix.S_IFBLK
+	return nil
+}
+
+func TestMount(t *testing.T) {
+	opt := &DigitalOceanOptions{
+		DefaultOptions: cloud.DefaultOptions{
+			VolumeID:   "80d414c6-295e-4e3a-ac58-eb9456c1e1d1",
+			FsType:     "ext4",
+			RW:         "rw",
+			VolumeName: "test-volume",
+		},
+	}
+	testcases := []struct {
+		name     string
+		options  *DigitalOceanOptions
+		mountDir string
+		device   string
+		err      error
+	}{
+		{
+			"mount device",
+			opt,
+			"/tmp/mount",
+			"test-volume",
+			nil,
+		},
+		{
+			"fs type not specified",
+			&DigitalOceanOptions{
+				DefaultOptions: cloud.DefaultOptions{
+					VolumeID:   "80d414c6-295e-4e3a-ac58-eb9456c1e1d1",
+					RW:         "rw",
+					VolumeName: "test-volume",
+				},
+			},
+			"/tmp/mount",
+			"test-volume",
+			fmt.Errorf("No filesystem type specified"),
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			cloud.ExecCommand = fakeExecCommand
+			cloud.UnixStat = fakeUnixStat
+			fakeClient := newFakeClient(nil, nil, nil)
+			v := &VolumeManager{ctx: context.Background(), client: fakeClient}
+
+			err := v.MountDevice(test.mountDir, test.device, test.options)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected %v. got: %v", test.err, err)
+			}
+		})
+	}
+
+}
+
+func Test_Unmount(t *testing.T) {
+	testcases := []struct {
+		name     string
+		mountDir string
+		err      error
+	}{
+		{
+			"mount device",
+			"/tmp/mount",
+			nil,
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			cloud.ExecCommand = fakeExecCommand
+			fakeClient := newFakeClient(nil, nil, nil)
+			v := &VolumeManager{ctx: context.Background(), client: fakeClient}
+
+			err := v.Unmount(test.mountDir)
+			if !reflect.DeepEqual(err, test.err) {
+				t.Errorf("unexpected err, expected nil. got: %v", err)
+			}
+		})
+	}
+}
