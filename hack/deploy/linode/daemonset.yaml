@@ -21,7 +21,7 @@ spec:
               privileged: true
           env:
             - name: PROVIDER
-              value: lightsail
+              value: linode
           volumeMounts:
             - mountPath: /flexmnt
               name: flexvolume-mount

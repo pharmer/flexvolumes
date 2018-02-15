@@ -34,7 +34,12 @@ func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, er
 	var vol *linodego.Volume
 	var err error
 	if opt.VolumeID == "" {
-		vol, err = getVolumeFromName(v.client, opt.VolumeName)
+		vName := opt.VolumeName
+		if vName == "" {
+			vName = opt.PVorVolumeName
+		}
+
+		vol, err = getVolumeFromName(v.client, vName)
 		if err != nil {
 			return "", err
 		}
@@ -111,8 +116,7 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 }
 
 func (v *VolumeManager) MountDevice(mountDir string, device string, options interface{}) error {
-	opt := options.(*LinodeOptions)
-	return Mount(mountDir, device, opt.DefaultOptions)
+	return ErrNotSupported
 }
 
 func (v *VolumeManager) Mount(mountDir string, options interface{}) error {
@@ -120,5 +124,5 @@ func (v *VolumeManager) Mount(mountDir string, options interface{}) error {
 }
 
 func (v *VolumeManager) Unmount(mountDir string) error {
-	return Unmount(mountDir)
+	return ErrNotSupported
 }

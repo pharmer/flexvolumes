@@ -52,7 +52,7 @@ COPY driver.sh /driver.sh
 
 ENTRYPOINT ["/driver.sh"]
 EOL
-    local cmd="docker build -t nightfury1204/$IMG:$TAG ."
+    local cmd="docker build -t pharmer/$IMG:$TAG ."
     echo $cmd; $cmd
 
     rm flexvolumes Dockerfile
