@@ -33,12 +33,19 @@ func (v *VolumeManager) Init() error {
 func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, error) {
 	opt := options.(*PacketOptions)
 
-	vol, _, err := v.client.Volumes.Get(opt.VolumeID)
+	projectID, err := getProjectID()
 	if err != nil {
 		return "", err
 	}
 
-	projectID, err := getProjectID()
+	volume := opt.VolumeID
+	if volume == "" {
+		volume, err = getVolumeId(v.client, projectID, opt.PVorVolumeName)
+		if err != nil {
+			return "", err
+		}
+	}
+	vol, _, err := v.client.Volumes.Get(volume)
 	if err != nil {
 		return "", err
 	}
@@ -97,13 +104,16 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 		if err != nil {
 			return err
 		}
-		return wait.PollImmediate(RetryInterval, RetryTimeout, func() (bool, error) {
+		if err := wait.PollImmediate(RetryInterval, RetryTimeout, func() (bool, error) {
 			at, _, _ := v.client.VolumeAttachments.Get(attachmentID)
 			if at == nil {
 				return true, nil
 			}
 			return false, nil
-		})
+		}); err != nil {
+			return err
+		}
+		return exec.Command("/sbin/multipath", "-W").Run()
 
 	}
 	return fmt.Errorf("could not find volume attached at %v", device)
@@ -111,7 +121,22 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 
 func (v *VolumeManager) MountDevice(mountDir string, device string, options interface{}) error {
 	opt := options.(*PacketOptions)
-	cmd := exec.Command("packet-block-storage-attach", "-m", "queue")
+	projectID, err := getProjectID()
+	if err != nil {
+		return err
+	}
+	volume := opt.VolumeID
+	if volume == "" {
+		volume, err = getVolumeId(v.client, projectID, opt.PVorVolumeName)
+		if err != nil {
+			return err
+		}
+	}
+	vol, _, err := v.client.Volumes.Get(volume)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("packet-block-storage-attach", "-m", "queue", vol.Name)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
