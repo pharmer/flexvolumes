@@ -2,19 +2,19 @@ package digitalocean
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/exec"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/digitalocean/godo"
 	"github.com/digitalocean/godo/context"
-	"time"
-	"fmt"
 	"github.com/pharmer/flexvolumes/cloud"
-	"strings"
-	"os/exec"
-	"os"
 	"golang.org/x/sys/unix"
 )
 
@@ -82,12 +82,12 @@ func (f *fakeDropletService) Neighbors(ctx context.Context, dropletID int) ([]go
 }
 
 type fakeStorageService struct {
-	listVolumesFn func(context.Context, *godo.ListVolumeParams) ([]godo.Volume, *godo.Response, error)
-	getVolumeFn func(context.Context, string) (*godo.Volume, *godo.Response, error)
-	createVolumeFn func(context.Context, *godo.VolumeCreateRequest) (*godo.Volume, *godo.Response, error)
-	deleteVolumeFn func(context.Context, string) (*godo.Response, error)
-	listSnapshotsFn func(ctx context.Context, volumeID string, opts *godo.ListOptions) ([]godo.Snapshot, *godo.Response, error)
-	getSnapshotFn func(context.Context, string) (*godo.Snapshot, *godo.Response, error)
+	listVolumesFn    func(context.Context, *godo.ListVolumeParams) ([]godo.Volume, *godo.Response, error)
+	getVolumeFn      func(context.Context, string) (*godo.Volume, *godo.Response, error)
+	createVolumeFn   func(context.Context, *godo.VolumeCreateRequest) (*godo.Volume, *godo.Response, error)
+	deleteVolumeFn   func(context.Context, string) (*godo.Response, error)
+	listSnapshotsFn  func(ctx context.Context, volumeID string, opts *godo.ListOptions) ([]godo.Snapshot, *godo.Response, error)
+	getSnapshotFn    func(context.Context, string) (*godo.Snapshot, *godo.Response, error)
 	createSnapshotFn func(context.Context, *godo.SnapshotCreateRequest) (*godo.Snapshot, *godo.Response, error)
 	deleteSnapshotFn func(context.Context, string) (*godo.Response, error)
 }
@@ -125,11 +125,11 @@ func (f *fakeStorageService) DeleteSnapshot(ctx context.Context, id string) (*go
 }
 
 type fakeStorageActionsService struct {
-	attachFn func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
+	attachFn            func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
 	detachByDropletIDFn func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
-	getFn func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
-	listFn func(ctx context.Context, volumeID string, opt *godo.ListOptions) ([]godo.Action, *godo.Response, error)
-	resizeFn func(ctx context.Context, volumeID string, sizeGigabytes int, regionSlug string) (*godo.Action, *godo.Response, error)
+	getFn               func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
+	listFn              func(ctx context.Context, volumeID string, opt *godo.ListOptions) ([]godo.Action, *godo.Response, error)
+	resizeFn            func(ctx context.Context, volumeID string, sizeGigabytes int, regionSlug string) (*godo.Action, *godo.Response, error)
 }
 
 func (f *fakeStorageActionsService) Attach(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error) {
@@ -141,7 +141,7 @@ func (f *fakeStorageActionsService) DetachByDropletID(ctx context.Context, volum
 }
 
 func (f *fakeStorageActionsService) Get(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error) {
-	return  f.getFn(ctx, volumeID, actionID)
+	return f.getFn(ctx, volumeID, actionID)
 }
 
 func (f *fakeStorageActionsService) List(ctx context.Context, volumeID string, opt *godo.ListOptions) ([]godo.Action, *godo.Response, error) {
@@ -201,7 +201,7 @@ func newFakeDroplet() *godo.Droplet {
 	}
 }
 
-func newFakeVolume() *godo.Volume  {
+func newFakeVolume() *godo.Volume {
 	return &godo.Volume{
 		Region:        &godo.Region{Slug: "nyc3"},
 		ID:            "80d414c6-295e-4e3a-ac58-eb9456c1e1d1",
@@ -248,17 +248,17 @@ func Test_Attach(t *testing.T) {
 		}, newFakeOKResponse(), nil
 	}
 
-	testcases := []struct{
-		name string
+	testcases := []struct {
+		name        string
 		getVolumeFn func(context.Context, string) (*godo.Volume, *godo.Response, error)
-		listDFunc           func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error)
-		getDFunc            func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error)
-		attachFn func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
-		getSAFn func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
-		options *DigitalOceanOptions
-		nodeName string
-		device string
-		err error
+		listDFunc   func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error)
+		getDFunc    func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error)
+		attachFn    func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
+		getSAFn     func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
+		options     *DigitalOceanOptions
+		nodeName    string
+		device      string
+		err         error
 	}{
 		{
 			"volume attach",
@@ -332,21 +332,20 @@ func Test_Attach(t *testing.T) {
 			"",
 			fmt.Errorf(`attach failed: godo.Action{ID:0, Status:"errored", Type:"", ResourceID:0, ResourceType:"", RegionSlug:""}`),
 		},
-
 	}
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			fakeD := &fakeDropletService{
-				getFunc: test.getDFunc,
+				getFunc:  test.getDFunc,
 				listFunc: test.listDFunc,
 			}
 			fakeS := &fakeStorageService{
-				getVolumeFn:   test.getVolumeFn,
+				getVolumeFn: test.getVolumeFn,
 			}
 			fakeSA := &fakeStorageActionsService{
 				attachFn: test.attachFn,
-				getFn: test.getSAFn,
+				getFn:    test.getSAFn,
 			}
 
 			fakeClient := newFakeClient(fakeS, fakeSA, fakeD)
@@ -363,7 +362,6 @@ func Test_Attach(t *testing.T) {
 	}
 
 }
-
 
 func Test_Detach(t *testing.T) {
 	listDropletFn := func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error) {
@@ -401,16 +399,16 @@ func Test_Detach(t *testing.T) {
 		}, newFakeOKResponse(), nil
 	}
 
-	testcases := []struct{
-		name string
+	testcases := []struct {
+		name                string
 		listDFunc           func(ctx context.Context, opt *godo.ListOptions) ([]godo.Droplet, *godo.Response, error)
 		getDFunc            func(ctx context.Context, dropletID int) (*godo.Droplet, *godo.Response, error)
-		listVolumesFn func(context.Context, *godo.ListVolumeParams) ([]godo.Volume, *godo.Response, error)
+		listVolumesFn       func(context.Context, *godo.ListVolumeParams) ([]godo.Volume, *godo.Response, error)
 		detachByDropletIDFn func(ctx context.Context, volumeID string, dropletID int) (*godo.Action, *godo.Response, error)
-		getSAFn func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
-		nodeName string
-		device string
-		err error
+		getSAFn             func(ctx context.Context, volumeID string, actionID int) (*godo.Action, *godo.Response, error)
+		nodeName            string
+		device              string
+		err                 error
 	}{
 		{
 			"volume detach",
@@ -460,20 +458,19 @@ func Test_Detach(t *testing.T) {
 			"test-volume",
 			fmt.Errorf(`attach failed: godo.Action{ID:0, Status:"errored", Type:"", ResourceID:0, ResourceType:"", RegionSlug:""}`),
 		},
-
 	}
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			fakeD := &fakeDropletService{
-				getFunc: test.getDFunc,
+				getFunc:  test.getDFunc,
 				listFunc: test.listDFunc,
 			}
 			fakeS := &fakeStorageService{
-				listVolumesFn:   test.listVolumesFn,
+				listVolumesFn: test.listVolumesFn,
 			}
 			fakeSA := &fakeStorageActionsService{
 				detachByDropletIDFn: test.detachByDropletIDFn,
-				getFn: test.getSAFn,
+				getFn:               test.getSAFn,
 			}
 
 			fakeClient := newFakeClient(fakeS, fakeSA, fakeD)
@@ -488,7 +485,6 @@ func Test_Detach(t *testing.T) {
 	}
 
 }
-
 
 // https://npf.io/2015/06/testing-exec-command/
 func fakeExecCommand(command string, args ...string) *exec.Cmd {
@@ -526,7 +522,7 @@ func TestMount(t *testing.T) {
 			opt,
 			"/tmp/mount",
 			"test-volume",
-			nil,
+			cloud.ErrNotSupported,
 		},
 		{
 			"fs type not specified",
@@ -539,7 +535,7 @@ func TestMount(t *testing.T) {
 			},
 			"/tmp/mount",
 			"test-volume",
-			fmt.Errorf("No filesystem type specified"),
+			cloud.ErrNotSupported,
 		},
 	}
 
@@ -568,7 +564,7 @@ func Test_Unmount(t *testing.T) {
 		{
 			"mount device",
 			"/tmp/mount",
-			nil,
+			cloud.ErrNotSupported,
 		},
 	}
 

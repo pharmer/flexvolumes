@@ -31,8 +31,15 @@ func (v *VolumeManager) Init() error {
 
 func (v *VolumeManager) Attach(options interface{}, nodeName string) (string, error) {
 	opt := options.(*DigitalOceanOptions)
-
-	vol, _, err := v.client.Storage.GetVolume(oauth2.NoContext, opt.VolumeID)
+	var err error
+	volume := opt.VolumeID
+	if volume == "" {
+		volume, err = getVolumeId(v.client, opt.PVorVolumeName)
+		if err != nil {
+			return "", err
+		}
+	}
+	vol, _, err := v.client.Storage.GetVolume(oauth2.NoContext, volume)
 	if err != nil {
 		return "", err
 	}
@@ -102,22 +109,13 @@ func (v *VolumeManager) Detach(device, nodeName string) error {
 }
 
 func (v *VolumeManager) MountDevice(mountDir string, device string, options interface{}) error {
-	opt := options.(*DigitalOceanOptions)
-	return Mount(mountDir, device, opt.DefaultOptions)
+	return ErrNotSupported
 }
 
 func (v *VolumeManager) Mount(mountDir string, options interface{}) error {
-	opt := options.(*DigitalOceanOptions)
-
-	vol, _, err := v.client.Storage.GetVolume(oauth2.NoContext, opt.VolumeID)
-	if err != nil {
-		return err
-	}
-
-	device := DEVICE_PREFIX + vol.Name
-	return Mount(mountDir, device, opt.DefaultOptions)
+	return ErrNotSupported
 }
 
 func (v *VolumeManager) Unmount(mountDir string) error {
-	return Unmount(mountDir)
+	return ErrNotSupported
 }
