@@ -1,16 +1,18 @@
 hash: 26e8d9c4453e9c116a990bff039cbff12d62b3b23e68b7047fca77ba41b5d57c
-updated: 2018-01-31T03:29:29.817450609-08:00
+updated: 2018-03-15T18:52:27.974700109Z
 imports:
 - name: github.com/appscode/go
-  version: 99dbf420807d9459b63d1d0bf702537bb7aa976f
+  version: f8f2e1c7d2d10789cdd0540468b487d14421dbf9
   subpackages:
   - analytics
   - homedir
   - log/golog
   - runtime
   - version
+- name: github.com/appscode/jsonpatch
+  version: 3e75a56b8967932466984d4432401e1c1a7ff61e
 - name: github.com/appscode/kutil
-  version: eae83543706680e70bf902428b43551cf7f1519b
+  version: 3e1d387015c275db5fd3d605fcf1f61af6ab6866
   subpackages:
   - meta
   - tools/analytics
@@ -48,7 +50,7 @@ imports:
   subpackages:
   - quantile
 - name: github.com/cpuguy83/go-md2man
-  version: 71acacd42f85e5e82f70a55327789582a5200a90
+  version: 48d8747a2ca13185e7cc8efe6e9fc196a83f71a5
   subpackages:
   - md2man
 - name: github.com/davecgh/go-spew
@@ -70,10 +72,12 @@ imports:
   version: ff4f55a206334ef123e4f79bbf348980da81ca46
   subpackages:
   - log
+- name: github.com/evanphx/json-patch
+  version: 944e07253867aacae43c04b2e6a239005443f33a
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/ghodss/yaml
-  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
+  version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/go-ini/ini
   version: 300e940a926eb277d3901b20bdfcc54928ad3642
 - name: github.com/go-openapi/jsonpointer
@@ -90,7 +94,7 @@ imports:
   - proto
   - sortkeys
 - name: github.com/golang/glog
-  version: 44145f04b68cf362d9c4df2182967c2275eaefed
+  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/groupcache
   version: 02826c3e79038b59d737d3b1c0a1d937f71a4433
   subpackages:
@@ -106,7 +110,7 @@ imports:
 - name: github.com/google/btree
   version: 7d79101e329e5a3adf994758c578dab82b90c017
 - name: github.com/google/go-cmp
-  version: 97aa668b73e764ccdd786bc3ccd2edffe621150e
+  version: 0c93777250bd58222171888d1651979319d8b381
   subpackages:
   - cmp
   - cmp/internal/diff
@@ -167,7 +171,7 @@ imports:
 - name: github.com/opencontainers/go-digest
   version: a6d0ee40d4207ea02364bd3b9e8e77b9159ba1eb
 - name: github.com/packethost/packngo
-  version: f1be085ecd6fca1b0a0e25eda71f208dcfcee5ab
+  version: a12e85fe62d71c82824079bed38164b4b8f0ff26
 - name: github.com/peterbourgon/diskv
   version: 5f041e8faa004a95c88a202771f4cc3e991971e6
 - name: github.com/pkg/errors
@@ -206,14 +210,14 @@ imports:
 - name: github.com/shurcooL/sanitized_anchor_name
   version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
 - name: github.com/sirupsen/logrus
-  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/spf13/afero
   version: b28a7effac979219c2a2ed6205a4d70e4b1bcd02
   subpackages:
   - mem
   - sftp
 - name: github.com/spf13/cobra
-  version: f91529fc609202eededff4de2dc0ba2f662240a3
+  version: c6c44e6fdcc30161c7f4480754da7230d01c06e3
   subpackages:
   - doc
 - name: github.com/spf13/pflag
@@ -251,7 +255,7 @@ imports:
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 95c6576299259db960f6c5b9b69ea52422860fce
+  version: a2e06a18b0d52d8cb2010e04b372a1965d8e3439
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -269,7 +273,7 @@ imports:
   - unicode/norm
   - width
 - name: google.golang.org/appengine
-  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
+  version: 5bee14b453b4c71be47ec1781b0fa61c2ea182db
   subpackages:
   - internal
   - internal/base
@@ -283,7 +287,7 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/api
-  version: 9fc595375ab38f53cbc3a53026ac40fb44ad50ca
+  version: 006a217681ae70cbacdd66a5e2fca1a61a8ff28e
   subpackages:
   - admissionregistration/v1alpha1
   - admissionregistration/v1beta1
@@ -314,7 +318,7 @@ imports:
   - storage/v1alpha1
   - storage/v1beta1
 - name: k8s.io/apiextensions-apiserver
-  version: 98ecf7bbd60f9f11a72000e4f05203f542136219
+  version: 6f29dd12234812844d29f52bd520bb01374619ce
   subpackages:
   - pkg/features
 - name: k8s.io/apimachinery
@@ -368,7 +372,7 @@ imports:
   - third_party/forked/golang/json
   - third_party/forked/golang/reflect
 - name: k8s.io/apiserver
-  version: 1270e9f1ad9eaf6127691df90af0836f7e152495
+  version: 2a1092aaa7202e8f9b188281ff9424a014ce61c2
   subpackages:
   - pkg/authentication/authenticator
   - pkg/authentication/serviceaccount
@@ -376,7 +380,7 @@ imports:
   - pkg/features
   - pkg/util/feature
 - name: k8s.io/client-go
-  version: 651d7a8818705e25181c672c1d71524a08e42bb0
+  version: 9389c055a838d4f208b699b3c7c51b70f2368861
   subpackages:
   - discovery
   - informers

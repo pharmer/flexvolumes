@@ -24,14 +24,16 @@ type projectsRoot struct {
 
 // Project represents a Packet project
 type Project struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name,omitempty"`
-	Created string   `json:"created_at,omitempty"`
-	Updated string   `json:"updated_at,omitempty"`
-	Users   []User   `json:"members,omitempty"`
-	Devices []Device `json:"devices,omitempty"`
-	SSHKeys []SSHKey `json:"ssh_keys,omitempty"`
-	URL     string   `json:"href,omitempty"`
+	ID            string        `json:"id"`
+	Name          string        `json:"name,omitempty"`
+	Organization  Organization  `json:"organization,omitempty"`
+	Created       string        `json:"created_at,omitempty"`
+	Updated       string        `json:"updated_at,omitempty"`
+	Users         []User        `json:"members,omitempty"`
+	Devices       []Device      `json:"devices,omitempty"`
+	SSHKeys       []SSHKey      `json:"ssh_keys,omitempty"`
+	URL           string        `json:"href,omitempty"`
+	PaymentMethod PaymentMethod `json:"payment_method,omitempty"`
 }
 
 func (p Project) String() string {
@@ -40,8 +42,8 @@ func (p Project) String() string {
 
 // ProjectCreateRequest type used to create a Packet project
 type ProjectCreateRequest struct {
-	Name          string `json:"name"`
-	PaymentMethod string `json:"payment_method,omitempty"`
+	Name            string `json:"name"`
+	PaymentMethodID string `json:"payment_method_id,omitempty"`
 }
 
 func (p ProjectCreateRequest) String() string {
@@ -50,9 +52,9 @@ func (p ProjectCreateRequest) String() string {
 
 // ProjectUpdateRequest type used to update a Packet project
 type ProjectUpdateRequest struct {
-	ID            string `json:"id"`
-	Name          string `json:"name,omitempty"`
-	PaymentMethod string `json:"payment_method,omitempty"`
+	ID              string `json:"id"`
+	Name            string `json:"name,omitempty"`
+	PaymentMethodID string `json:"payment_method_id,omitempty"`
 }
 
 func (p ProjectUpdateRequest) String() string {
