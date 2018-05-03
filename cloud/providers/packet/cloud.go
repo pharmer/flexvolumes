@@ -6,7 +6,7 @@ import (
 )
 
 func getDevice(client *packngo.Client, projectID string, nodeName string) (*packngo.Device, error) {
-	devices, _, err := client.Devices.List(projectID)
+	devices, _, err := client.Devices.List(projectID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +20,7 @@ func getDevice(client *packngo.Client, projectID string, nodeName string) (*pack
 }
 
 func getVolumeId(client *packngo.Client, projectID, pvName string) (string, error) {
-	vols, _, err := client.Projects.ListVolumes(projectID)
+	vols, _, err := client.Volumes.List(projectID, nil)
 	if err != nil {
 		return "", err
 	}
