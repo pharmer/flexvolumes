@@ -1,36 +1,34 @@
 package: github.com/pharmer/flexvolumes
 import:
+- package: github.com/JamesClonk/vultr
+  version: 1.15.0
 - package: github.com/appscode/go
   version: master
+- package: github.com/appscode/kutil
+  version: release-8.0
 - package: github.com/aws/aws-sdk-go
-  version: v1.12.33
+  version: v1.14.21
 - package: github.com/digitalocean/godo
-  version: v1.1.1
+  version: v1.3.0
 - package: github.com/golang/glog
-- package: github.com/hashicorp/go-version
-  repo: https://github.com/appscode/go-version.git
-  vcs: git
-  version: master
 - package: github.com/jpillora/go-ogle-analytics
 - package: github.com/packethost/packngo
   version: master
+- package: github.com/pkg/errors
+  version: v0.8.0
 - package: github.com/spf13/cobra
-  version: master
+  version: v0.0.3
 - package: github.com/taoh/linodego
   repo: https://github.com/appscode/linodego.git
   version: master
   vcs: git
+- package: golang.org/x/crypto
+  version: 49796115aa4b964c318aad4f3084fdb41e9aa067
 - package: golang.org/x/oauth2
 - package: golang.org/x/sys
 - package: k8s.io/apimachinery
-  version: kubernetes-1.10.0
+  repo: https://github.com/pharmer/apimachinery.git
+  vcs: git
+  version: release-1.11
 - package: k8s.io/kubernetes
-  version: v1.10.0
-- package: github.com/appscode/kutil
-  version: release-7.0
-- package: github.com/juju/ratelimit
-  version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
-- package: github.com/cpuguy83/go-md2man
-  version: v1.0.4
-- package: golang.org/x/crypto
-  version: master
+  version: v1.11.0

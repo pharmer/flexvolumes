@@ -58,5 +58,5 @@ func getCredential() (*TokenSource, error) {
 }
 
 func (t *TokenSource) getClient() *packngo.Client {
-	return packngo.NewClient("", t.ApiKey, nil)
+	return packngo.NewClientWithAuth("", t.ApiKey, nil)
 }

@@ -2,6 +2,7 @@ package digitalocean
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"github.com/digitalocean/godo"
-	"github.com/digitalocean/godo/context"
 	"github.com/pharmer/flexvolumes/cloud"
 	"golang.org/x/sys/unix"
 )
