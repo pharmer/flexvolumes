@@ -3,14 +3,13 @@ package lightsail
 import (
 	"fmt"
 	"testing"
-
-	_aws "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	//_aws "github.com/aws/aws-sdk-go/aws"
+	//"github.com/aws/aws-sdk-go/service/lightsail"
 	//"strconv"
 )
 
 func TestVloume(t *testing.T) {
-	tkn := &TokenSource{
+	/*tkn := &TokenSource{
 		AccessKeyID:     "",
 		SecretAccessKey: "",
 	}
@@ -20,23 +19,7 @@ func TestVloume(t *testing.T) {
 		DiskName: _aws.String("flextest"),
 	})
 	fmt.Println(err)
-	fmt.Println(*resp.Disk)
-
-	ins, err := instanceByName(client, "medium-1-0-pool-d5oi7g")
-
-	fmt.Println(*ins, err)
-	fmt.Println(*resp.Disk.AttachedTo == *ins.Name)
-	/*re, err := client.AttachDisk(&lightsail.AttachDiskInput{
-		DiskName: resp.Disk.Name,
-		InstanceName: ins.Name,
-		DiskPath: _aws.String("/dev/xvdf"),
-	})
-	fmt.Println(*re, err)*/
-
-	r, e := client.DetachDisk(&lightsail.DetachDiskInput{
-		DiskName: _aws.String("flextest"),
-	})
-	fmt.Println(*r, e)
+	fmt.Println(*resp.Disk)*/
 }
 
 func TestPath(t *testing.T) {

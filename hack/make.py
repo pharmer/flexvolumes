@@ -76,7 +76,7 @@ def version():
 
 
 def fmt():
-    libbuild.ungroup_go_imports('*.go', 'cloud', 'cmds')
+    libbuild.ungroup_go_imports('*.go', 'cloud', 'cmds', 'util')
     die(call('goimports -w *.go cloud cmds'))
     call('gofmt -s -w *.go cloud cmds')
 

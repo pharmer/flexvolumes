@@ -1,14 +1,14 @@
 package packet
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
 
 	"github.com/packethost/packngo"
 )
 
 func TestVol(t *testing.T) {
-	client := getClient()
+	/*client := getClient()
 
 	vol, _, err := client.Volumes.Get("")
 	if err != nil {
@@ -20,7 +20,7 @@ func TestVol(t *testing.T) {
 
 	for _, v := range vol.Attachments {
 		fmt.Println(v.Device.ID)
-	}
+	}*/
 	/*device, err := getDevice(client, "", "baremetal-0-pool-mjbwrc")
 	if err != nil {
 		fmt.Println(err)

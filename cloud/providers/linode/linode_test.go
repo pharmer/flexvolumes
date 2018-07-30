@@ -407,7 +407,7 @@ func TestMount(t *testing.T) {
 			opt,
 			"/tmp/mount",
 			"test-volume",
-			nil,
+			fmt.Errorf("Not Supported"),
 		},
 		{
 			"fs type not specified",
@@ -420,7 +420,7 @@ func TestMount(t *testing.T) {
 			},
 			"/tmp/mount",
 			"test-volume",
-			fmt.Errorf("No filesystem type specified"),
+			fmt.Errorf("Not Supported"),
 		},
 	}
 
@@ -449,7 +449,7 @@ func Test_Unmount(t *testing.T) {
 		{
 			"mount device",
 			"/tmp/mount",
-			nil,
+			fmt.Errorf("Not Supported"),
 		},
 	}
 
